@@ -62,31 +62,48 @@ var _num_w = 25;
 var _num_h = 25;
 var _w = 8*_num_w;
 var _h = 8*_num_h;
-vertex_begin(ground, vertex_format);
+var color = c_white;
 
-for(var _ii = 0; _ii < _num_w; _ii++)
+#macro BLOCK_W 8
+#macro BLOCK_H 8
+
+vertex_begin(ground, vertex_format);
+for(var _ii = 0, _x; _ii < _num_w; _ii++)
 {
-	for(var _jj = 0; _jj < _num_h; _jj++)
+	_x = _ii*BLOCK_W;
+	for(var _jj = 0, _y; _jj < _num_h; _jj++)
 	{
-	
+		_y = _jj*BLOCK_H;
+		var _uvs = sprite_get_uvs(spr_grass,0);
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       color, 1);
+		vertex_add_point(ground, _x+BLOCK_W, _y, 0,                 0, 0, 1,        _ur, _vt,       color, 1);
+		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       color, 1);
+
+		//bottom triangle
+		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       color, 1);
+		vertex_add_point(ground, _x, _y + BLOCK_H, 0,               0, 0, 1,        _ul, _vb,       color, 1);
+		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       color, 1);
 	}
 }
 
-var s = 128;
+//var s = 128;
+//var xtex = room_width / sprite_get_width(sprRock);
+//var ytex = room_height / sprite_get_height(sprRock);
 
 
+//vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
+//vertex_add_point(ground, room_width, 0, 0,                 0, 0, 1,        xtex, 0,       color, 1);
+//vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
 
-var xtex = room_width / sprite_get_width(sprRock);
-var ytex = room_height / sprite_get_height(sprRock);
-var color = c_white;
-
-vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
-vertex_add_point(ground, room_width, 0, 0,                 0, 0, 1,        xtex, 0,       color, 1);
-vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
-
-vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
-vertex_add_point(ground, 0, room_height, 0,                0, 0, 1,        0, ytex,       color, 1);
-vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
+//vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
+//vertex_add_point(ground, 0, room_height, 0,                0, 0, 1,        0, ytex,       color, 1);
+//vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
 
 vertex_end(ground);
 
