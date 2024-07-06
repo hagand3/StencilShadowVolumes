@@ -1,6 +1,16 @@
 global.time = 0;
 
-#macro NUM_CUBES 50
+#macro NUM_CUBES 100
+#macro NUM_LIGHTS 8
+
+enum light_source_types
+{
+	single,
+	multiple,
+	length,
+}
+light_source_type = light_source_types.single
+num_lights = NUM_LIGHTS;
 
 z = -96;
 cameraMat = 0;
@@ -8,14 +18,9 @@ cameraProjMat = 0;
 
 modIndex = -1;
 
-//display_reset(4,true);
-
-//gpu_set_texrepeat(true);
-//gpu_set_blendenable(true);
 
 gpu_set_ztestenable(true);
 gpu_set_zwriteenable(true);
-gpu_set_sprite_cull(true);
 
 gpu_set_alphatestenable(true);
 gpu_set_alphatestref(0.5);
@@ -334,6 +339,7 @@ shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_form
 shadowSurface2 = 0;
 
 
+//Create cubes
 repeat(NUM_CUBES)
 {
 	var _ii = random_range(-5,5);
@@ -344,3 +350,4 @@ repeat(NUM_CUBES)
 	_cube.shadow_vbuff = shadowVBuffer;
 	_cube.z = _z;
 }
+

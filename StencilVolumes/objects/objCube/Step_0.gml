@@ -41,4 +41,4 @@ rotation_x = rotation_x_spd*_time + rotation_x_phase;
 rotation_y = rotation_y_spd*_time + rotation_y_phase;
 //rotation_z = 10.2*_time;
 
-matrix = matrix_build(x + BLOCK_SIZE/2, y + BLOCK_SIZE/2, -z-BLOCK_SIZE/2, rotation_x, rotation_y, rotation_z, BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
+matrix = matrix_build(x + BLOCK_SIZE/2, y + BLOCK_SIZE/2, -z-BLOCK_SIZE/2, rotation_x, rotation_y, rotation_z, scale, scale, scale);
