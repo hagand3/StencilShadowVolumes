@@ -20,7 +20,7 @@ void main()
     vec3 normB = (NB*2.0-1.0);
     float LdotA = dot(LightDirec,normA);
     float LdotB = dot(LightDirec,normB);
-    vec3 pos = in_Position;
+    vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0);
     
     //Determine which vertices to extrude
     float SilEdge = 1.0 - step(0.0,LdotA*LdotB); //returns 1.0 if LdotA*LdotB < 0, 0.0 otherwise
@@ -30,7 +30,9 @@ void main()
     float MobileVertexB = step(0.5,in_Colour1.a);
     float extrudeCondition = ExtrudeA*MobileVertexA + ExtrudeB*MobileVertexB;
     
-    pos += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity
+    pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity
 	//pos += 0.1*(normA+normB)*extrudeCondition;
-    gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * vec4(pos,1.0);
+    //gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * vec4(pos,1.0);
+	
+	gl_Position = gm_Matrices[MATRIX_PROJECTION]*gm_Matrices[MATRIX_VIEW]*pos;
 }

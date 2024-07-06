@@ -1,18 +1,21 @@
-time = 0;
+global.time = 0;
 z = -96;
 cameraMat = 0;
 cameraProjMat = 0;
 
 modIndex = -1;
 
-gpu_set_texrepeat(true);
-gpu_set_blendenable(true);
+//display_reset(4,true);
+
+//gpu_set_texrepeat(true);
+//gpu_set_blendenable(true);
 
 gpu_set_ztestenable(true);
 gpu_set_zwriteenable(true);
+gpu_set_sprite_cull(true);
 
 gpu_set_alphatestenable(true);
-gpu_set_alphatestref(1);
+gpu_set_alphatestref(0.5);
 
 vertex_format_begin();
 vertex_format_add_position_3d();
@@ -41,56 +44,79 @@ normalArray = [];
 materialArray = [];
 modelArray = [];
 
-model = load_obj("cube.obj", "cube.mtl");
 
-cube = instance_create_depth(x, y, 0, objCube);
-cube.model = model;
 //cube.materialArray = materialArray;
 
 movePitch = 0;
 moveDir = 0;
 
-modelMatrix = matrix_build(100, 100, -50, 0, 0, 0, 50, 50, 50);
+modelMatrix = matrix_build(0, 0, -1, 0, 0, 0, 1, 1, 1);
 
-var xtex = room_width / sprite_get_width(sprRock);
-var ytex = room_height / sprite_get_height(sprRock);
-var color = c_white;
 
-// Create a checkerboard pattern on the floor
-ground = vertex_create_buffer();
-var _num_w = 25;
-var _num_h = 25;
+var _num_w = 30; //number of tiles wide for floor
+var _num_h = 30; //number of tiles tall for floor
 var _w = 8*_num_w;
 var _h = 8*_num_h;
-var color = c_white;
+var _color = c_white; //default color
+#macro BLOCK_SIZE 8 //block size
 
-#macro BLOCK_W 8
-#macro BLOCK_H 8
-
+// Create ground
+ground = vertex_create_buffer();
 vertex_begin(ground, vertex_format);
 for(var _ii = 0, _x; _ii < _num_w; _ii++)
 {
-	_x = _ii*BLOCK_W;
+	_x = _ii*BLOCK_SIZE;
 	for(var _jj = 0, _y; _jj < _num_h; _jj++)
 	{
-		_y = _jj*BLOCK_H;
-		var _uvs = sprite_get_uvs(spr_grass,0);
+		_y = _jj*BLOCK_SIZE;
+		switch(irandom(2))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_grass,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
 		var _ul = _uvs[0];
 		var _vt = _uvs[1];
 		var _ur = _uvs[2];
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       color, 1);
-		vertex_add_point(ground, _x+BLOCK_W, _y, 0,                 0, 0, 1,        _ur, _vt,       color, 1);
-		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       color, 1);
+		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y, 0,                 0, 0, 1,        _ur, _vt,       _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
 
 		//bottom triangle
-		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       color, 1);
-		vertex_add_point(ground, _x, _y + BLOCK_H, 0,               0, 0, 1,        _ul, _vb,       color, 1);
-		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
+		vertex_add_point(ground, _x, _y + BLOCK_SIZE, 0,               0, 0, 1,        _ul, _vb,       _color, 1);
+		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
 	}
 }
+vertex_end(ground);
+
+////create static block 
+//static_block = vertex_create_buffer();
+//vertex_begin(ground, vertex_format);
+
+////top
+//		//top triangle
+//		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
+//		vertex_add_point(ground, _x+BLOCK_W, _y, 0,                 0, 0, 1,        _ur, _vt,       _color, 1);
+//		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
+
+//		//bottom triangle
+//		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
+//		vertex_add_point(ground, _x, _y + BLOCK_H, 0,               0, 0, 1,        _ul, _vb,       _color, 1);
+//		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
+
+
 
 //var s = 128;
 //var xtex = room_width / sprite_get_width(sprRock);
@@ -105,7 +131,6 @@ for(var _ii = 0, _x; _ii < _num_w; _ii++)
 //vertex_add_point(ground, 0, room_height, 0,                0, 0, 1,        0, ytex,       color, 1);
 //vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
 
-vertex_end(ground);
 
 hash1 = 0;
 hash2 = 0;
@@ -131,7 +156,7 @@ trianglesAmount = array_length(vertexArray)/3;
 buffShadows = buffer_create(720, buffer_grow, 1);
 //show_debug_message(cubeBuffer);
 //show_debug_message(_size);
-
+model = load_obj("cube.obj", "cube.mtl");
 cubeBuffer = buffer_create_from_vertex_buffer(model, buffer_fixed, 1);
 bufferSize = buffer_get_size(cubeBuffer);
 show_debug_message(bufferSize);
@@ -302,3 +327,10 @@ show_debug_message(sizeBuff);
 
 shadowSurface = 0;
 shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_format);
+
+shadowSurface2 = 0;
+
+
+cube = instance_create_depth(8*15, 8*15, 0, objCube);
+cube.model = model;
+cube.shadow_vbuff = shadowVBuffer;

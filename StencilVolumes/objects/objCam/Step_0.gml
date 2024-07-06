@@ -1,15 +1,16 @@
-time += 1;
-var _rad = 400;
-xfrom = _rad*dsin(time);
-yfrom = _rad*dcos(time);
-zfrom = -200;
+global.time += 0.5;
+var _rad = 30;
+xfrom = 15*BLOCK_SIZE + _rad*dsin(global.time);
+yfrom = 15*BLOCK_SIZE + _rad*dcos(global.time);
+zfrom = -20;
+
 xto = xfrom + dcos(moveDir);
 yto = yfrom - dsin(moveDir);
 zto = zfrom + dsin(movePitch);
 
-xto = 0;
-yto = 0;
-zto = 0;
+xto = BLOCK_SIZE*15;
+yto = BLOCK_SIZE*15;
+zto = -BLOCK_SIZE/2;
 
 cameraMat = matrix_build_lookat(xfrom, yfrom, zfrom, xto, yto, zto, 0, 0, 1);
 cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 32000);

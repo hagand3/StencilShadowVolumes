@@ -16,6 +16,6 @@ void main()
     
     v_vColour = in_Colour;
 	v_vColour.rgb *= 0.5; //basic-ass shading
-	v_vColour.a = 1.0; //force alpha of 1 (cube model doesn't have alpha of 1?)
+	//v_vColour.a = 1.0; //force alpha of 1 (cube model doesn't have alpha of 1?)
     v_vTexcoord = in_TextureCoord;
 }
