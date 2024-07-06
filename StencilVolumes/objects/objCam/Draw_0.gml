@@ -35,11 +35,13 @@ gpu_set_stencil_ref(0); //set reference to 0 (shouldn't matter here as the stenc
 			//render front-facing shadow volume polygons
 			gpu_set_cullmode(cull_counterclockwise);
 			gpu_set_stencil_pass(stencilop_incr); //increment
+			//gpu_set_colorwriteenable(true,false,false,true);
 			with(objCube){drawSelfShadow();}
 		
 			//render rear-facing shadow volume polygons
 			gpu_set_cullmode(cull_clockwise);
 			gpu_set_stencil_pass(stencilop_decr); //decrement
+			//gpu_set_colorwriteenable(false,false,true,true);
 			with(objCube){drawSelfShadow();}
 	}
 	shader_reset();
@@ -49,11 +51,12 @@ draw_clear_depth(1);
 gpu_set_colorwriteenable(true,true,true,true);
 gpu_set_zwriteenable(true);
 gpu_set_ztestenable(true);
-gpu_set_cullmode(cull_counterclockwise);
+//gpu_set_cullmode(cull_counterclockwise);
 gpu_set_stencil_pass(stencilop_keep); //increment
 gpu_set_stencil_ref(0);
 	
 	//Render unshaded geometry
+	gpu_set_cullmode(cull_noculling);
 	gpu_set_stencil_func(cmpfunc_equal);
 	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	with (objCube)
@@ -62,6 +65,7 @@ gpu_set_stencil_ref(0);
 	}
 	
 	//Render shaded geometry
+	//gpu_set_cullmode(cull_noculling);
 	gpu_set_stencil_func(cmpfunc_notequal);
 	shader_set(shd_render_shaded);
 	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
