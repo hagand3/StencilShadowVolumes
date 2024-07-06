@@ -1,15 +1,15 @@
 global.time += 0.25;
 var _rad = 100;
-xfrom = 0*15*BLOCK_SIZE + _rad*dsin(global.time);
-yfrom = 0*15*BLOCK_SIZE + _rad*dcos(global.time);
+xfrom = 50*BLOCK_SIZE + _rad*dsin(global.time);
+yfrom = 50*BLOCK_SIZE + _rad*dcos(global.time);
 zfrom = -80;
 
 xto = xfrom + dcos(moveDir);
 yto = yfrom - dsin(moveDir);
 zto = zfrom + dsin(movePitch);
 
-xto = BLOCK_SIZE*15;
-yto = BLOCK_SIZE*15;
+xto = BLOCK_SIZE*50;
+yto = BLOCK_SIZE*50;
 zto = -BLOCK_SIZE/2;
 
 cameraMat = matrix_build_lookat(xfrom, yfrom, zfrom, xto, yto, zto, 0, 0, 1);

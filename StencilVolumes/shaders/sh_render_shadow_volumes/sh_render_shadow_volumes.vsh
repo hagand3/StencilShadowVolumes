@@ -27,7 +27,7 @@ void main()
 	//vec4 normB = vec4(in_Normal1,0.0);
     
 	//vec3 LightDirec = normalize(pos.xyz - vec3(0.0,0.0,-800.0));
-	vec3 LightDirec = normalize(pos.xyz -LightPos);
+	vec3 LightDirec = normalize(pos.xyz - LightPos);
 	//vec3 LightDirec = LightPos;
 	float LdotA = dot(LightDirec,normA.xyz);
     //float LdotB = dot(LightDirec,normB.xyz);
