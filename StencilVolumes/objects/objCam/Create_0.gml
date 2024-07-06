@@ -72,8 +72,8 @@ moveDir = 0;
 modelMatrix = matrix_build(0, 0, -1, 0, 0, 0, 1, 1, 1);
 
 
-var _num_w = 30; //number of tiles wide for floor
-var _num_h = 30; //number of tiles tall for floor
+var _num_w = 100; //number of tiles wide for floor
+var _num_h = 100; //number of tiles tall for floor
 var _w = 8*_num_w;
 var _h = 8*_num_h;
 var _color = c_white; //default color
@@ -183,6 +183,7 @@ bufferSize = buffer_get_size(cubeBuffer);
 show_debug_message(bufferSize);
 
 var _numTriangles = bufferSize/triangleSize;
+var _num_edges = 0;
 buffReadPos = 0;
 for (var i = 0; i < _numTriangles; i++){
 	
@@ -245,11 +246,12 @@ for (var i = 0; i < _numTriangles; i++){
 				}
 				else
 				{
-					if (arrayEdgeNode[3] != -1){
-						variable_struct_remove(structEdgeGraph, _hash);	
-					}
-					else
+					//if (arrayEdgeNode[3] != -1){
+					//	variable_struct_remove(structEdgeGraph, _hash);	
+					//}
+					//else
 					{
+						_num_edges++;
 						_nx = buffer_peek(cubeBuffer, arrayEdgeNode[0]+12, buffer_f32);
 						_ny = buffer_peek(cubeBuffer, arrayEdgeNode[0]+16, buffer_f32);
 						_nz = buffer_peek(cubeBuffer, arrayEdgeNode[0]+20, buffer_f32);
@@ -334,9 +336,9 @@ for (var i = 0; i < _numTriangles; i++){
 								buffer_write(buffShadows,buffer_f32,_x2A);
 								buffer_write(buffShadows,buffer_f32,_y2A); 
 								buffer_write(buffShadows,buffer_f32,_z2A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
+								buffer_write(buffShadows,buffer_f32,_normXB);
+								buffer_write(buffShadows,buffer_f32,_normYB);
+								buffer_write(buffShadows,buffer_f32,_normZB);
 								buffer_write(buffShadows,buffer_f32,_normXB);
 								buffer_write(buffShadows,buffer_f32,_normYB);
 								buffer_write(buffShadows,buffer_f32,_normZB);
@@ -349,9 +351,9 @@ for (var i = 0; i < _numTriangles; i++){
 								buffer_write(buffShadows,buffer_f32,_x2A);
 								buffer_write(buffShadows,buffer_f32,_y2A); 
 								buffer_write(buffShadows,buffer_f32,_z2A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
+								buffer_write(buffShadows,buffer_f32,_normXB);
+								buffer_write(buffShadows,buffer_f32,_normYB);
+								buffer_write(buffShadows,buffer_f32,_normZB);
 								buffer_write(buffShadows,buffer_f32,_normXB);
 								buffer_write(buffShadows,buffer_f32,_normYB);
 								buffer_write(buffShadows,buffer_f32,_normZB);
@@ -363,9 +365,9 @@ for (var i = 0; i < _numTriangles; i++){
 								buffer_write(buffShadows,buffer_f32,_x1A);
 								buffer_write(buffShadows,buffer_f32,_y1A);
 								buffer_write(buffShadows,buffer_f32,_z1A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
+								buffer_write(buffShadows,buffer_f32,_normXB);
+								buffer_write(buffShadows,buffer_f32,_normYB);
+								buffer_write(buffShadows,buffer_f32,_normZB);
 								buffer_write(buffShadows,buffer_f32,_normXB);
 								buffer_write(buffShadows,buffer_f32,_normYB);
 								buffer_write(buffShadows,buffer_f32,_normZB);
@@ -621,6 +623,7 @@ for (var i = 0; i < _numTriangles; i++){
 		
 sizeBuff = buffer_tell(buffShadows);
 show_debug_message(sizeBuff);
+show_debug_message($"num silhouette edges: {_num_edges}");
 
 shadowSurface = 0;
 shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_format);

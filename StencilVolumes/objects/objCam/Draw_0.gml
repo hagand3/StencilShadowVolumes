@@ -30,7 +30,7 @@ gpu_set_stencil_ref(0); //set reference to 0 (shouldn't matter here as the stenc
 		var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 		//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 		//shader_set_uniform_f_array(_uniform, lightArray);
-		shader_set_uniform_f_array(_uniform, [15*BLOCK_SIZE,15*BLOCK_SIZE,100*lightArray[2]]);
+		shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
 			
 			//render front-facing shadow volume polygons
 			gpu_set_cullmode(cull_counterclockwise);

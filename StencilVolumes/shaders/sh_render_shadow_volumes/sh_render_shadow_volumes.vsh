@@ -30,16 +30,20 @@ void main()
 	vec3 LightDirec = normalize(pos.xyz -LightPos);
 	//vec3 LightDirec = LightPos;
 	float LdotA = dot(LightDirec,normA.xyz);
-    float LdotB = dot(LightDirec,normB.xyz);
+    //float LdotB = dot(LightDirec,normB.xyz);
     
     //Determine which vertices to extrude
-    float SilEdge = 1.0 - step(0.0,LdotA*LdotB); //returns 1.0 if LdotA*LdotB < 0, 0.0 otherwise
-	float ExtrudeA = step(0.0, LdotA) * SilEdge; 
-    float ExtrudeB = step(0.0, LdotB) * SilEdge;
-    float MobileVertexA = step(0.5,in_Colour.r);
-    float MobileVertexB = step(0.5,in_Colour.g);
-    float extrudeCondition = ExtrudeA*MobileVertexA + ExtrudeB*MobileVertexB;
-    
+    //float SilEdge = 1.0 - step(0.0,LdotA*LdotB); //returns 1.0 if LdotA*LdotB < 0, 0.0 otherwise
+	//float ExtrudeA = step(0.0, LdotA) * SilEdge; 
+    //float ExtrudeB = step(0.0, LdotB) * SilEdge;
+    //float MobileVertexA = step(0.5,in_Colour.r);
+    //float MobileVertexB = step(0.5,in_Colour.g);
+    //float extrudeCondition = ExtrudeA*MobileVertexA + ExtrudeB*MobileVertexB;
+	
+	//Method 2
+	float ExtrudeA = step(0.0, LdotA); 
+    float extrudeCondition = ExtrudeA;
+	
     pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity
 	//pos += 0.1*(normA+normB)*extrudeCondition;
     //gl_Position = gm_Matrices[MATRIX_WORLD_VIEW_PROJECTION] * vec4(pos,1.0);

@@ -14,8 +14,8 @@ rotation_z = 0;
 rotation_x_phase = 0.0*random(360);
 rotation_y_phase = 0.0*random(360);
 rotation_z_phase = 0.0*random(360);
-rotation_x_spd = 0.0*random_range(-4.0,4.0);
-rotation_y_spd = 0.0*random_range(-4.0,4.0);
+rotation_x_spd = 1.0*random_range(-4.0,4.0);
+rotation_y_spd = 1.0*random_range(-4.0,4.0);
 
 scale = BLOCK_SIZE;
 
