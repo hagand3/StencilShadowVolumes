@@ -1,8 +1,22 @@
 z = -64;
 
+spd = 1;
+spd_x = random_range(-1,1);
+spd_y = random_range(-1,1);
+dir = point_direction(0,0,spd_x,spd_y);
+spd_x = lengthdir_x(spd,dir);
+spd_y = lengthdir_y(spd,dir);
+collision_this_frame = false;
+
 rotation_x = 0;
 rotation_y = 0;
 rotation_z = 0;
+rotation_x_phase = random(360);
+rotation_y_phase = random(360);
+rotation_z_phase = random(360);
+rotation_x_spd = random_range(-4.0,4.0);
+rotation_y_spd = random_range(-4.0,4.0);
+
 
 //model = load_obj("cube.obj", "cube.mtl");
 model = 0;

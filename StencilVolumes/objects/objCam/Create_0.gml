@@ -1,4 +1,7 @@
 global.time = 0;
+
+#macro NUM_CUBES 50
+
 z = -96;
 cameraMat = 0;
 cameraProjMat = 0;
@@ -331,6 +334,13 @@ shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_form
 shadowSurface2 = 0;
 
 
-cube = instance_create_depth(8*15, 8*15, 0, objCube);
-cube.model = model;
-cube.shadow_vbuff = shadowVBuffer;
+repeat(NUM_CUBES)
+{
+	var _ii = random_range(-5,5);
+	var _jj = random_range(-5,5);
+	var _z = random_range(10,40);
+	var _cube = instance_create_depth(BLOCK_SIZE*(15-_ii), BLOCK_SIZE*(15-_jj), 0, objCube);
+	_cube.model = model;
+	_cube.shadow_vbuff = shadowVBuffer;
+	_cube.z = _z;
+}

@@ -1,8 +1,8 @@
 global.time += 0.5;
-var _rad = 30;
+var _rad = 70;
 xfrom = 15*BLOCK_SIZE + _rad*dsin(global.time);
 yfrom = 15*BLOCK_SIZE + _rad*dcos(global.time);
-zfrom = -20;
+zfrom = -80;
 
 xto = xfrom + dcos(moveDir);
 yto = yfrom - dsin(moveDir);
