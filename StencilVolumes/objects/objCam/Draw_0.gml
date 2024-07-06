@@ -25,10 +25,11 @@ gpu_set_stencil_ref(0); //set reference to 0 (shouldn't matter here as the stenc
 
 	//Render shadow volumes to stencil buffer
 	shader_set(sh_render_shadow_volumes);
-	repeat(num_lights)
+	for(var _ii = 0; _ii < num_lights; _ii++)
 	{
-		var _uniform = shader_get_uniform(sh_shadow, "LightDirec");
-		//shader_set_uniform_f_array(_uniform, lightArray);
+		var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightDirec");
+		//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
+		shader_set_uniform_f_array(_uniform, lightArray);
 		
 			
 			//render front-facing shadow volume polygons

@@ -12,6 +12,16 @@ enum light_source_types
 light_source_type = light_source_types.single
 num_lights = NUM_LIGHTS;
 
+//initialize lights
+light_pos = [];
+for(var _ii = 0; _ii < num_lights; _ii++)
+{
+	var _x = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
+	var _y = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
+	var _z = random_range(CUBE_MAX_Z+BLOCK_SIZE, CUBE_MAX_Z+5*BLOCK_SIZE); //lights above all blocks
+	light_pos[_ii] = [_x,_y,_z];
+}
+
 z = -96;
 cameraMat = 0;
 cameraProjMat = 0;
@@ -340,11 +350,13 @@ shadowSurface2 = 0;
 
 
 //Create cubes
+#macro CUBE_MIN_Z 10
+#macro CUBE_MAX_Z 40
 repeat(NUM_CUBES)
 {
 	var _ii = random_range(-5,5);
 	var _jj = random_range(-5,5);
-	var _z = random_range(10,40);
+	var _z = random_range(CUBE_MIN_Z,CUBE_MAX_Z);
 	var _cube = instance_create_depth(BLOCK_SIZE*(15-_ii), BLOCK_SIZE*(15-_jj), 0, objCube);
 	_cube.model = model;
 	_cube.shadow_vbuff = shadowVBuffer;
