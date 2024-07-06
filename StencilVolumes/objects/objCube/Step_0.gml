@@ -1,18 +1,38 @@
 var _time = global.time;
 
+collision_this_frame = false; //reset collision flag
+
 //invisible box
-var _r = BLOCK_SIZE*8;
+var _r = BLOCK_SIZE*15;
 var _d = BLOCK_SIZE*15;
 
-if((x < _d-_r and spd_x < 0) or (x >= _d+_r and spd_x > 0))
+//wrap position
+if(x < _d-_r and spd_x < 0)
 {
-	spd_x *= -1; //flip direction
+	x = _d + _r;	
+}
+if(x > _d+_r and spd_x > 0)
+{
+	x = _d - _r;
+}
+if(y < _d-_r and spd_y < 0)
+{
+	y = _d + _r;	
+}
+if(y >= _d+_r and spd_y > 0)
+{
+	y = _d - _r;	
 }
 
-if((y < _d-_r and spd_y < 0) or (y >= _d+_r and spd_y > 0))
-{
-	spd_y *= -1; //flip direction
-}
+//if((x < _d-_r and spd_x < 0) or (x >= _d+_r and spd_x > 0))
+//{
+//	spd_x *= -1; //flip direction
+//}
+
+//if((y < _d-_r and spd_y < 0) or (y >= _d+_r and spd_y > 0))
+//{
+//	spd_y *= -1; //flip direction
+//}
 
 x += spd_x;
 y += spd_y;

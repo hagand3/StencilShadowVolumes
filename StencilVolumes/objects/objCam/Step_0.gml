@@ -1,4 +1,4 @@
-global.time += 0.5;
+global.time += 0.25;
 var _rad = 70;
 xfrom = 15*BLOCK_SIZE + _rad*dsin(global.time);
 yfrom = 15*BLOCK_SIZE + _rad*dcos(global.time);
