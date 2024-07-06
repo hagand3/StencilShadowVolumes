@@ -84,7 +84,16 @@ if !(surface_exists(shadowSurface2)){
 	//gpu_set_stencil_func(cmpfunc_notequal);
 	
 	
-	//////Render geometry unshaded
+	//Render geometry shaded
+	
+	
+	gpu_set_stencil_func(cmpfunc_equal);
+	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	with (objCube)
+	{
+		drawSelf();	
+	}
+	
 	gpu_set_stencil_func(cmpfunc_notequal);
 	shader_set(shd_render_shaded);
 	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
@@ -93,16 +102,5 @@ if !(surface_exists(shadowSurface2)){
 		drawSelf();	
 	}
 	shader_reset();
-	
-	gpu_set_stencil_func(cmpfunc_equal);
-	//gpu_set_stencil_pass(stencilop_keep);
-	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	with (objCube)
-	{
-		drawSelf();	
-	}
-	
-	
+		
 	gpu_set_stencil_enable(false);
-	//gpu_set_zfunc(cmpfunc_lessequal);
-	//gpu_set_ztestenable(true);

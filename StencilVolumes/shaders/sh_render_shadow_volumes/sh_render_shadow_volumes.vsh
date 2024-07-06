@@ -16,10 +16,10 @@ void main()
 {
     vec3 NA = in_Colour0.rgb;
     vec3 NB = in_Colour1.rgb;
-    vec3 normA = (NA*2.0-1.0);
-    vec3 normB = (NB*2.0-1.0);
-    float LdotA = dot(LightDirec,normA);
-    float LdotB = dot(LightDirec,normB);
+    vec4 normA = gm_Matrices[MATRIX_WORLD]*vec4((NA*2.0-1.0),0.0);
+    vec4 normB = gm_Matrices[MATRIX_WORLD]*vec4((NB*2.0-1.0),0.0);
+    float LdotA = dot(LightDirec,normA.xyz);
+    float LdotB = dot(LightDirec,normB.xyz);
     vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0);
     
     //Determine which vertices to extrude
