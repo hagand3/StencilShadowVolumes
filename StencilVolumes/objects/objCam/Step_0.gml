@@ -1,7 +1,7 @@
 global.time += 0.25;
-var _rad = 100;
-xfrom = 15*BLOCK_SIZE + _rad*dsin(global.time);
-yfrom = 15*BLOCK_SIZE + _rad*dcos(global.time);
+var _rad = 20;
+xfrom = 0*15*BLOCK_SIZE + _rad*dsin(global.time);
+yfrom = 0*15*BLOCK_SIZE + _rad*dcos(global.time);
 zfrom = -100;
 
 xto = xfrom + dcos(moveDir);
@@ -13,7 +13,7 @@ yto = BLOCK_SIZE*15;
 zto = -BLOCK_SIZE/2;
 
 cameraMat = matrix_build_lookat(xfrom, yfrom, zfrom, xto, yto, zto, 0, 0, 1);
-cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 1000);
+cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 10000);
 
 if (mouse_check_button_pressed(mb_any))
 {

@@ -7,7 +7,7 @@ attribute vec3 in_Position;                  // (x,y,z)
 attribute vec4 in_Colour0;                  // (x,y,z)     Normal from face A
 attribute vec4 in_Colour1;                  // (x,y,z)     Normal from face B
 
-uniform vec3 LightDirec;
+uniform vec3 LightPos;
 
 const float _pi = 3.1415;
 const float large_val = 100000000000000000000000000000000000.0;
@@ -18,9 +18,12 @@ void main()
     vec3 NB = in_Colour1.rgb;
     vec4 normA = gm_Matrices[MATRIX_WORLD]*vec4((NA*2.0-1.0),0.0);
     vec4 normB = gm_Matrices[MATRIX_WORLD]*vec4((NB*2.0-1.0),0.0);
-    float LdotA = dot(LightDirec,normA.xyz);
-    float LdotB = dot(LightDirec,normB.xyz);
     vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0);
+	//vec3 LightDirec = normalize(pos.xyz - vec3(0.0,0.0,-800.0));
+	vec3 LightDirec = normalize(pos.xyz -LightPos);
+	//vec3 LightDirec = LightPos;
+	float LdotA = dot(LightDirec,normA.xyz);
+    float LdotB = dot(LightDirec,normB.xyz);
     
     //Determine which vertices to extrude
     float SilEdge = 1.0 - step(0.0,LdotA*LdotB); //returns 1.0 if LdotA*LdotB < 0, 0.0 otherwise
