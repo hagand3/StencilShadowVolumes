@@ -13,7 +13,7 @@ yto = BLOCK_SIZE*50;
 zto = -BLOCK_SIZE/2;
 
 cameraMat = matrix_build_lookat(xfrom, yfrom, zfrom, xto, yto, zto, 0, 0, 1);
-cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 10000);
+cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 32000);
 
 if (mouse_check_button_pressed(mb_any))
 {
