@@ -12,14 +12,15 @@ attribute vec4 in_Colour;                  // (x,y,z)     Normal from face A
 uniform vec3 LightPos;
 
 const float _pi = 3.1415;
-const float large_val = 100.0;
+const float large_val = 10000.0;
+//const float large_val = 10000000000000000000.0;
 
 void main()
 {
 	vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0); //translate/rotate according to world matrix
-	//vec4 normA = normalize(gm_Matrices[MATRIX_WORLD]*vec4(in_Normal,0.0)); //translate/rotate according to world matrix
+	vec4 normA = normalize(gm_Matrices[MATRIX_WORLD]*vec4(in_Normal,0.0)); //translate/rotate according to world matrix
 
-	vec4 normA = vec4(in_Normal,0.0);
+	//vec4 normA = vec4(in_Normal,0.0);
 	vec3 LightDirec = normalize(pos.xyz - LightPos);
 	float LdotA = dot(LightDirec,normA.xyz);
 	float ExtrudeA = step(0.0, LdotA); 

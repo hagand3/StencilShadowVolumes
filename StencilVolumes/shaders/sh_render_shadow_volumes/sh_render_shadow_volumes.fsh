@@ -5,5 +5,5 @@
 void main()
 {
     //gl_FragColor = vec4(mix(backFacingColor, frontFacingColor, float(gl_FrontFacing)),0.0,1.0);
-	gl_FragColor = vec4(1.0);
+	gl_FragColor = vec4(0.0);
 }

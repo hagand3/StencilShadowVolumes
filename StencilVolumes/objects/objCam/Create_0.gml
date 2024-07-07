@@ -1,6 +1,6 @@
 global.time = 0;
 
-#macro NUM_CUBES 10
+#macro NUM_CUBES 100
 #macro NUM_LIGHTS 1
 
 enum light_source_types
@@ -54,7 +54,7 @@ xfrom = 0;
 yfrom = 0;
 zfrom = 0;
 
-lightArray = [0*BLOCK_SIZE, 0*BLOCK_SIZE, 1];
+lightArray = [38, 38, -5];
 
 mouseLock = false;
 
