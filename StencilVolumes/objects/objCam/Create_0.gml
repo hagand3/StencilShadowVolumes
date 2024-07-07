@@ -258,12 +258,14 @@ for (var i = 0; i < _numTriangles; i++){
 						
 						var _nAdotV13 = dot_product_3d_normalized(_nx,_ny,_nz,(_xV3[j] - _xV1[j]),(_yV3[j] - _yV1[j]),(_zV3[j] - _zV1[j]));
 						
-						//if(_nAdotV13 >= 0.0)
-						//{
-						//	arrayEdgeNode = -1;
-						//	variable_struct_remove(structEdgeGraph, _hash);
-						//}
-						//else
+						
+						//if(_nx == (_xV3[j] - _xV1[j]) and _ny == (_yV3[j] - _yV1[j]) and _nz == (_zV3[j] - _zV1[j]))
+						if(_nAdotV13 >= 0.0)
+						{
+							arrayEdgeNode = -1;
+							variable_struct_remove(structEdgeGraph, _hash);
+						}
+						else
 						{
 							arrayEdgeNode[3] = buffPos1[j];
 							arrayEdgeNode[4] = buffPos2[j];

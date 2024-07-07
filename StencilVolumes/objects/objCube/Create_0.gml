@@ -26,6 +26,7 @@ shadow_vbuff = 0;
 materialArray = 0;
 
 matrix = matrix_build(x + BLOCK_SIZE/2, y + BLOCK_SIZE/2, -BLOCK_SIZE/2, 0, 0, 0, scale,scale,scale);
+matrix_rot = -1;
 
 drawSelf = function()
 {
@@ -38,6 +39,7 @@ drawSelf = function()
 drawSelfShadow = function()
 {
 	matrix_set(matrix_world, matrix);
+	//shader_set_uniform_matrix_array(u_Matrix, matrix_rot);
 	vertex_submit(shadow_vbuff, pr_trianglelist, -1);
 	matrix_set(matrix_world, matrix_build_identity());
 }

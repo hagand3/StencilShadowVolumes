@@ -2,7 +2,9 @@
   "FolderOrderSettings":[],
   "ResourceOrderSettings":[
     {"name":"sh_render_shadow_volumes","order":2,"path":"shaders/sh_render_shadow_volumes/sh_render_shadow_volumes.yy",},
+    {"name":"Shader6","order":4,"path":"shaders/Shader6/Shader6.yy",},
     {"name":"shd_render_shaded","order":1,"path":"shaders/shd_render_shaded/shd_render_shaded.yy",},
+    {"name":"shd_test","order":3,"path":"shaders/shd_test/shd_test.yy",},
     {"name":"spr_block_textures","order":1,"path":"sprites/spr_block_textures/spr_block_textures.yy",},
     {"name":"spr_dirt","order":3,"path":"sprites/spr_dirt/spr_dirt.yy",},
     {"name":"spr_grass","order":2,"path":"sprites/spr_grass/spr_grass.yy",},

@@ -31,7 +31,8 @@ gpu_set_stencil_ref(0); //set reference to 0 (shouldn't matter here as the stenc
 		var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 		//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 		//shader_set_uniform_f_array(_uniform, lightArray);
-		shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
+		//shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
+		shader_set_uniform_f_array(_uniform, [400,400,-60]);
 			
 			//render front-facing shadow volume polygons
 			gpu_set_cullmode(cull_counterclockwise);
@@ -52,12 +53,11 @@ draw_clear_depth(1);
 gpu_set_colorwriteenable(true,true,true,true);
 gpu_set_zwriteenable(true);
 gpu_set_ztestenable(true);
-gpu_set_cullmode(cull_counterclockwise);
 gpu_set_stencil_pass(stencilop_keep); //increment
 gpu_set_stencil_ref(0);
 	
 	//Render unshaded geometry
-	//gpu_set_cullmode(cull_noculling);
+	gpu_set_cullmode(cull_noculling);
 	gpu_set_stencil_func(cmpfunc_equal);
 	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	with (objCube)
@@ -79,4 +79,19 @@ gpu_set_stencil_ref(0);
 //reset for drawing main surface
 gpu_set_stencil_enable(false);
 gpu_set_stencil_func(cmpfunc_always);
+
+
+////Visualize Normals
+//draw_clear_depth(1);
+//gpu_set_zwriteenable(true);
+//gpu_set_ztestenable(true);
+//draw_clear_alpha(c_purple,1.0);
+//shader_set(shd_test);
+//vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+//with (objCube)
+//{
+//	drawSelf();	
+//}
+//shader_reset();
+
 

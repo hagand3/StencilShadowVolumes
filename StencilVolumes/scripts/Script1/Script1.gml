@@ -155,10 +155,10 @@ function load_obj(argument0, argument1) {
 					
 					var tN = ny;
 					ny = nz;
-					nz = tN;
+					nz = tN; //flip normal
 					
 					array_push(objCam.vertexArray, xx, yy, zz);
-					array_push(objCam.normalArray, nx, ny, nz);
+					array_push(objCam.normalArray, nx, ny, nz); 
 				
 					// Add the data to the vertex buffers
 					vertex_position_3d(model, xx, yy, zz);
