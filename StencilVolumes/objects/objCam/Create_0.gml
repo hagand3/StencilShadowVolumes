@@ -192,18 +192,73 @@ for (var i = 0; i < _numTriangles; i++){
 	var _xA = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
 	var _yA = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
 	var _zA = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
+	var _nxA = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
+	var _nyA = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
+	var _nzA = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
 	
 	buffReadPos += 36;
 	var _pos2 = buffReadPos;
 	var _xB = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
 	var _yB = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
 	var _zB = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
+	var _nxB = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
+	var _nyB = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
+	var _nzB = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
 	
 	buffReadPos += 36;
 	var _pos3 = buffReadPos;
 	var _xC = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
 	var _yC = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
 	var _zC = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
+	var _nxC = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
+	var _nyC = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
+	var _nzC = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
+	
+		////write triangle into shadow volume buffer
+		////Triangle 1
+		//buffer_write(buffShadows,buffer_f32,_xA);
+		//buffer_write(buffShadows,buffer_f32,_yA);
+		//buffer_write(buffShadows,buffer_f32,_zA);
+		//buffer_write(buffShadows,buffer_f32,_nxA);
+		//buffer_write(buffShadows,buffer_f32,_nyA);
+		//buffer_write(buffShadows,buffer_f32,_nzA);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_u8,0); //extrudable for condition A
+		//buffer_write(buffShadows,buffer_u8,255);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		
+		//buffer_write(buffShadows,buffer_f32,_xB);
+		//buffer_write(buffShadows,buffer_f32,_yB);
+		//buffer_write(buffShadows,buffer_f32,_zB);
+		//buffer_write(buffShadows,buffer_f32,_nxB);
+		//buffer_write(buffShadows,buffer_f32,_nyB);
+		//buffer_write(buffShadows,buffer_f32,_nzB);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_u8,0); //extrudable for condition A
+		//buffer_write(buffShadows,buffer_u8,255);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		
+		//buffer_write(buffShadows,buffer_f32,_xC);
+		//buffer_write(buffShadows,buffer_f32,_yC);
+		//buffer_write(buffShadows,buffer_f32,_zC);
+		//buffer_write(buffShadows,buffer_f32,_nxC);
+		//buffer_write(buffShadows,buffer_f32,_nyC);
+		//buffer_write(buffShadows,buffer_f32,_nzC);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_f32,0);
+		//buffer_write(buffShadows,buffer_u8,0); //extrudable for condition A
+		//buffer_write(buffShadows,buffer_u8,255);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		
+		
 	
 	var _hash1 = string_join(",",string(min(_xA,_xB)),string(max(_xA,_xB)),string(min(_yA,_yB)),string(max(_yA,_yB)),string(min(_zA,_zB)),string(max(_zA,_zB)));
 	var _hash2 = string_join(",",string(min(_xB,_xC)),string(max(_xB,_xC)),string(min(_yB,_yC)),string(max(_yB,_yC)),string(min(_zB,_zC)),string(max(_zB,_zC)));

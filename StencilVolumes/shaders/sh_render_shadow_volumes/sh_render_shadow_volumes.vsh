@@ -12,7 +12,7 @@ attribute vec4 in_Colour;                  // (x,y,z)     Normal from face A
 uniform vec3 LightPos;
 
 const float _pi = 3.1415;
-const float large_val = 10000.0;
+const float large_val = 1000000.0;
 //const float large_val = 10000000000000000000.0;
 
 void main()
@@ -25,6 +25,9 @@ void main()
 	float LdotA = dot(LightDirec,normA.xyz);
 	float ExtrudeA = step(0.0, LdotA); 
     float extrudeCondition = ExtrudeA;
+	
+	//***FLAG "endcap" triangles with color attribute. If facing away from source, extrude as normal.
+	//if facing light source, set position to -99999,-999999,-9999999 to cull it away.
 	
     pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity
 	

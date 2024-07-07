@@ -1,10 +1,11 @@
 var camera = camera_get_active();
 	
-draw_clear_alpha(c_purple,1.0);
+
 camera_set_view_mat(camera, cameraMat);
 camera_set_proj_mat(camera, cameraProjMat);
 camera_apply(camera);
 
+draw_clear_alpha(c_purple,1.0);
 gpu_set_zwriteenable(true);
 gpu_set_ztestenable(true);
 gpu_set_cullmode(cull_counterclockwise);
