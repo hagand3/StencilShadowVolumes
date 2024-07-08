@@ -17,6 +17,7 @@ void main()
 {
 	vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0); //translate/rotate according to world matrix
 	vec4 normA = normalize(gm_Matrices[MATRIX_WORLD]*vec4(in_Normal,0.0)); //translate/rotate according to world matrix
+	//vec4 normA = vec4(in_Normal,0.0); //translate/rotate according to world matrix
 
 	vec3 LightDirec = normalize(pos.xyz - LightPos);
 	float LdotA = dot(LightDirec,normA.xyz);
@@ -26,7 +27,11 @@ void main()
 	//if facing light source, set position to -99999,-999999,-9999999 to cull it away.
 	float cap_extrude_condition = step(0.5,in_Colour.r); 
 	
-    pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity
+	pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity if facing away from light
+	//if(cap_extrude_condition > 0.5 && extrudeCondition < 0.5) //if a non-edge triangle and facing the light, extrude with reverse winding
+	//{
+	//	pos.xyz += large_val*LightDirec;
+	//}
 	
 	//if(cap_extrude_condition > 0.5 && extrudeCondition > 0.5)
 	//{

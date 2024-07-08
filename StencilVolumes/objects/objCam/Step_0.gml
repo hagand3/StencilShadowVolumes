@@ -1,8 +1,9 @@
 global.time += 0.25;
-var _rad = 100;
-xfrom = 50*BLOCK_SIZE + _rad*dsin(global.time);
-yfrom = 50*BLOCK_SIZE + _rad*dcos(global.time);
-zfrom = -80;
+//phase = global.time;
+
+xfrom = 50*BLOCK_SIZE + rad*dsin(phase);
+yfrom = 50*BLOCK_SIZE + rad*dcos(phase);
+//zfrom = -80;
 
 xto = xfrom + dcos(moveDir);
 yto = yfrom - dsin(moveDir);
@@ -10,21 +11,51 @@ zto = zfrom + dsin(movePitch);
 
 xto = BLOCK_SIZE*50;
 yto = BLOCK_SIZE*50;
-zto = -BLOCK_SIZE/2;
+zto = BLOCK_SIZE/2;
 
 cameraMat = matrix_build_lookat(xfrom, yfrom, zfrom, xto, yto, zto, 0, 0, 1);
-cameraProjMat = matrix_build_projection_perspective_fov(60, window_get_width() / window_get_height(), 1, 32000);
+cameraProjMat = matrix_build_projection_perspective_fov(-60, -window_get_width() / window_get_height(), 1, 32000);
 
-if (mouse_check_button_pressed(mb_any))
+if(mouse_check_button(mb_left))
 {
-    window_set_cursor(cr_none);
-    mouseLock = true;
+	phase -= 1;	
 }
-else if (keyboard_check_pressed(vk_escape))
+
+if(mouse_check_button(mb_right))
 {
-    window_set_cursor(cr_default);
-	mouseLock = false;
+	phase += 1;	
 }
+
+if(mouse_wheel_up())
+{
+	rad -= 1;
+}
+
+if(mouse_wheel_down())
+{
+	rad += 1;
+}
+
+if(keyboard_check(ord("W")))
+{
+	zfrom += 1;	
+}
+
+if(keyboard_check(ord("S")))
+{
+	zfrom -= 1;	
+}
+
+//if (mouse_check_button_pressed(mb_any))
+//{
+//    window_set_cursor(cr_none);
+//    mouseLock = true;
+//}
+//else if (keyboard_check_pressed(vk_escape))
+//{
+//    window_set_cursor(cr_default);
+//	mouseLock = false;
+//}
 
 if (keyboard_check(ord("D"))){
 	y += 10;	

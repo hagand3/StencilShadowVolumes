@@ -1,3 +1,3 @@
 /// @description Restart
-//room_restart();
+room_restart();
 

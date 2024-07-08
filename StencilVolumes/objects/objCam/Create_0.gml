@@ -4,9 +4,19 @@ global.time = 0;
 #macro NUM_LIGHTS 1
 
 #macro BLOCK_SIZE 8 //block size
+#macro BLOCK_SIZE_HALF 4 //block size / 2
 #macro BLOCK_MIN_Z 10
 #macro BLOCK_MAX_Z 40
 
+//toggles:
+enum shadow_volumes_render_techniques
+{
+	depth_pass,
+	depth_fail,
+	length,
+}
+shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_pass
+view_normals = false;
 
 enum light_source_types
 {
@@ -28,6 +38,11 @@ for(var _ii = 0; _ii < num_lights; _ii++)
 }
 
 z = -96;
+phase = 0;
+rad = 100;
+xfrom = 0;
+yfrom = 0;
+zfrom = 80;
 cameraMat = 0;
 cameraProjMat = 0;
 
@@ -53,11 +68,9 @@ vertex_format_add_normal();
 vertex_format_add_color();
 shadow_vertex_format = vertex_format_end();
 
-xfrom = 0;
-yfrom = 0;
-zfrom = 0;
 
-lightArray = [38, 38, -5];
+
+lightArray = [38, 38, 5];
 
 mouseLock = false;
 
@@ -110,47 +123,93 @@ for(var _ii = 0, _x; _ii < _num_w; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x,			_y, 0,                 0, 0, 1, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y, 0,                 0, 0, 1, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x,			_y,				 0,    0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y,				 0,    0, 0, 1, _ur, _vt, _color, 1);
 		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
 																			    
 		//bottom triangle													    
 		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
 		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, 0,    0, 0, 1, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y, 0,                 0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x,			_y,				 0,    0, 0, 1, _ul, _vt, _color, 1);
 	}
 }
 vertex_end(ground);
 
-////create static block 
-//static_block = vertex_create_buffer();
-//vertex_begin(ground, vertex_format);
+//Create block manually
+block = vertex_create_buffer();
+//origin
+var _x = 0;
+var _y = 0;
+var _z = 0;
+//normal vector positive directions
+var _z_up = 1;
+var _y_up = 1;
+var _x_up = 1;
+//uvs
+var _uvs = sprite_get_uvs(spr_stone,0);
+var _ul = _uvs[0];
+var _vt = _uvs[1];
+var _ur = _uvs[2];
+var _vb = _uvs[3];
+vertex_begin(block, vertex_format);
 
-////top
-//		//top triangle
-//		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
-//		vertex_add_point(ground, _x+BLOCK_W, _y, 0,                 0, 0, 1,        _ur, _vt,       _color, 1);
-//		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
+	//Top 
+		//top triangle
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ur, _vb, _color, 1);																	    
+		//bottom triangle													  
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, 0, _z_up, _ul, _vt, _color, 1);
+	//Bottom 
+		//top triangle
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ur, _vb, _color, 1);																	    
+		//bottom triangle												    
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, 0, -_z_up, _ul, _vt, _color, 1);
+	//Front
+		//top triangle
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, _y_up, 0, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, _y_up, 0, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, _y_up, 0, _ur, _vb, _color, 1);																	    
+		//bottom triangle												  							 
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, _y_up, 0, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, _y_up, 0, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, _y_up, 0, _ul, _vt, _color, 1);
+	//Back
+		//top triangle
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, -_y_up, 0, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, -_y_up, 0, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, -_y_up, 0, _ur, _vb, _color, 1);																	    
+		//bottom triangle												  							 	
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, -_y_up, 0, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    0, -_y_up, 0, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    0, -_y_up, 0, _ul, _vt, _color, 1);
+	//Right
+		//top triangle
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    _x_up, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    _x_up, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    _x_up, 0, 0, _ur, _vb, _color, 1);																	    
+		//bottom triangle											  							  
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    _x_up, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    _x_up, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x + BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    _x_up, 0, 0, _ul, _vt, _color, 1);
+	//Left
+		//top triangle
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ur, _vb, _color, 1);																	    
+		//bottom triangle								  							  				
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ul, _vt, _color, 1);
 
-//		//bottom triangle
-//		vertex_add_point(ground, _x+BLOCK_W, _y + BLOCK_H, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
-//		vertex_add_point(ground, _x, _y + BLOCK_H, 0,               0, 0, 1,        _ul, _vb,       _color, 1);
-//		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
+vertex_end(block);
 
-
-
-//var s = 128;
-//var xtex = room_width / sprite_get_width(sprRock);
-//var ytex = room_height / sprite_get_height(sprRock);
-
-
-//vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
-//vertex_add_point(ground, room_width, 0, 0,                 0, 0, 1,        xtex, 0,       color, 1);
-//vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
-
-//vertex_add_point(ground, room_width, room_height, 0,       0, 0, 1,        xtex, ytex,       color, 1);
-//vertex_add_point(ground, 0, room_height, 0,                0, 0, 1,        0, ytex,       color, 1);
-//vertex_add_point(ground, 0, 0, 0,                          0, 0, 1,        0, 0,       color, 1);
 
 
 hash1 = 0;
@@ -178,8 +237,8 @@ buffShadows = buffer_create(720, buffer_grow, 1);
 //show_debug_message(cubeBuffer);
 //show_debug_message(_size);
 model = load_obj("cube.obj", "cube.mtl");
-cubeBuffer = buffer_create_from_vertex_buffer(model, buffer_fixed, 1);
-
+//cubeBuffer = buffer_create_from_vertex_buffer(model, buffer_fixed, 1);
+cubeBuffer = buffer_create_from_vertex_buffer(block, buffer_fixed, 1);
 
 bufferSize = buffer_get_size(cubeBuffer);
 show_debug_message(bufferSize);
@@ -229,39 +288,39 @@ for (var i = 0; i < _numTriangles; i++){
 	_nzC = _nzC == -0 ? 0 : _nzC;
 	
 		//write triangle into shadow volume buffer
-		//Triangle 1
-		buffer_write(buffShadows,buffer_f32,_xA);
-		buffer_write(buffShadows,buffer_f32,_yA);
-		buffer_write(buffShadows,buffer_f32,_zA);
-		buffer_write(buffShadows,buffer_f32,_nxA);
-		buffer_write(buffShadows,buffer_f32,_nyA);
-		buffer_write(buffShadows,buffer_f32,_nzA);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		////Triangle 1
+		//buffer_write(buffShadows,buffer_f32,_xA);
+		//buffer_write(buffShadows,buffer_f32,_yA);
+		//buffer_write(buffShadows,buffer_f32,_zA);
+		//buffer_write(buffShadows,buffer_f32,_nxA);
+		//buffer_write(buffShadows,buffer_f32,_nyA);
+		//buffer_write(buffShadows,buffer_f32,_nzA);
+		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
 		
-		buffer_write(buffShadows,buffer_f32,_xB);
-		buffer_write(buffShadows,buffer_f32,_yB);
-		buffer_write(buffShadows,buffer_f32,_zB);
-		buffer_write(buffShadows,buffer_f32,_nxB);
-		buffer_write(buffShadows,buffer_f32,_nyB);
-		buffer_write(buffShadows,buffer_f32,_nzB);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_f32,_xB);
+		//buffer_write(buffShadows,buffer_f32,_yB);
+		//buffer_write(buffShadows,buffer_f32,_zB);
+		//buffer_write(buffShadows,buffer_f32,_nxB);
+		//buffer_write(buffShadows,buffer_f32,_nyB);
+		//buffer_write(buffShadows,buffer_f32,_nzB);
+		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
 		
-		buffer_write(buffShadows,buffer_f32,_xC);
-		buffer_write(buffShadows,buffer_f32,_yC);
-		buffer_write(buffShadows,buffer_f32,_zC);
-		buffer_write(buffShadows,buffer_f32,_nxC);
-		buffer_write(buffShadows,buffer_f32,_nyC);
-		buffer_write(buffShadows,buffer_f32,_nzC);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_f32,_xC);
+		//buffer_write(buffShadows,buffer_f32,_yC);
+		//buffer_write(buffShadows,buffer_f32,_zC);
+		//buffer_write(buffShadows,buffer_f32,_nxC);
+		//buffer_write(buffShadows,buffer_f32,_nyC);
+		//buffer_write(buffShadows,buffer_f32,_nzC);
+		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
+		//buffer_write(buffShadows,buffer_u8,0);
 		
 		
 	
@@ -311,22 +370,28 @@ for (var i = 0; i < _numTriangles; i++){
 					//}
 					//else
 					{
-						_num_edges++;
+						
 						_nx = buffer_peek(cubeBuffer, arrayEdgeNode[0]+12, buffer_f32);
 						_ny = buffer_peek(cubeBuffer, arrayEdgeNode[0]+16, buffer_f32);
 						_nz = buffer_peek(cubeBuffer, arrayEdgeNode[0]+20, buffer_f32);
 						
 						var _nAdotV13 = dot_product_3d_normalized(_nx,_ny,_nz,(_xV3[j] - _xV1[j]),(_yV3[j] - _yV1[j]),(_zV3[j] - _zV1[j]));
 						
+						//_normXA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+12, buffer_f32);
+						//_normYA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+16, buffer_f32);
+						//_normZA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+20, buffer_f32);
 						
 						//if(_nx == (_xV3[j] - _xV1[j]) and _ny == (_yV3[j] - _yV1[j]) and _nz == (_zV3[j] - _zV1[j]))
-						//if(_nAdotV13 >= 0.0)
-						//{
-						//	arrayEdgeNode = -1;
-						//	variable_struct_remove(structEdgeGraph, _hash);
-						//}
-						//else
+						//if(_nx == _normXA and _ny == _normYA and _nz == _normZA)
+						if(_nAdotV13 >= 0.0) //remove coplanar edges
 						{
+							arrayEdgeNode = -1;
+							variable_struct_remove(structEdgeGraph, _hash);
+						}
+						else
+						{
+							_num_edges++;
+							
 							arrayEdgeNode[3] = buffPos1[j];
 							arrayEdgeNode[4] = buffPos2[j];
 							arrayEdgeNode[5] = buffPos3[j];
@@ -657,15 +722,5 @@ shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_form
 shadowSurface2 = 0;
 
 
-//Create cubes
-repeat(NUM_CUBES)
-{
-	var _ii = random_range(-5,5);
-	var _jj = random_range(-5,5);
-	var _z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
-	var _cube = instance_create_depth(BLOCK_SIZE*(50-_ii), BLOCK_SIZE*(50-_jj), 0, objCube);
-	_cube.model = model;
-	_cube.shadow_vbuff = shadowVBuffer;
-	_cube.z = _z;
-}
+
 
