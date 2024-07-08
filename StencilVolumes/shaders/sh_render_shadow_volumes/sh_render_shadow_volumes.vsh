@@ -10,7 +10,7 @@ attribute vec4 in_Colour;
 uniform vec3 LightPos;
 
 const float _pi = 3.1415;
-const float large_val = 100000.0; //1000000000.0;
+const float large_val = 1000000000.0; //1000000000.0;
 //const float large_val = 10000000000000000000.0;
 
 void main()

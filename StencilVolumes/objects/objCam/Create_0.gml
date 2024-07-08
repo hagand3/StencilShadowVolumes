@@ -110,14 +110,14 @@ for(var _ii = 0, _x; _ii < _num_w; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y, 0,                 0, 0, 1,        _ur, _vt,       _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
-
-		//bottom triangle
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,       0, 0, 1,        _ur, _vb,       _color, 1);
-		vertex_add_point(ground, _x, _y + BLOCK_SIZE, 0,               0, 0, 1,        _ul, _vb,       _color, 1);
-		vertex_add_point(ground, _x, _y, 0,                         0, 0, 1,        _ul, _vt,       _color, 1);
+		vertex_add_point(ground, _x,			_y, 0,                 0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y, 0,                 0, 0, 1, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
+																			    
+		//bottom triangle													    
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, 0,    0, 0, 1, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y, 0,                 0, 0, 1, _ul, _vt, _color, 1);
 	}
 }
 vertex_end(ground);
