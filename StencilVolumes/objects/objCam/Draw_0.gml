@@ -46,10 +46,12 @@ switch(shadow_volumes_render_technique)
 		for(var _ii = 0; _ii < num_lights; _ii++)
 		{
 			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
+			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 			//shader_set_uniform_f_array(_uniform, lightArray);
 			//shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
 			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 				//render front-facing shadow volume polygons
 				gpu_set_cullmode(cull_counterclockwise);
@@ -76,10 +78,12 @@ switch(shadow_volumes_render_technique)
 		for(var _ii = 0; _ii < num_lights; _ii++)
 		{
 			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
+			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 			//shader_set_uniform_f_array(_uniform, lightArray);
 			//shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
 			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 				//render front-facing shadow volume polygons
 				gpu_set_cullmode(cull_clockwise);

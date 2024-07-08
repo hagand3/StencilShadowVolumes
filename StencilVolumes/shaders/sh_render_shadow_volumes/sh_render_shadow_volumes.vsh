@@ -8,6 +8,9 @@ attribute vec3 in_Normal;
 attribute vec4 in_Colour;
 
 uniform vec3 LightPos;
+uniform vec3 Eye;
+
+varying highp float depth;
 
 const float _pi = 3.1415;
 const float large_val = 10000.0; //1000000000.0;
@@ -41,4 +44,24 @@ void main()
 	//}
 	
 	gl_Position = gm_Matrices[MATRIX_PROJECTION]*gm_Matrices[MATRIX_VIEW]*pos;
+	
+	//float dis = distance(vec3(0.0,0.0,0.0),gl_Position.xyz);
+	float dis = (pos.z / gl_Position.w);
+	//float dis = length(gl_Position.xyz);
+	float znear = 1.0;
+	float zfar = 32000.0;
+	float zparam = zfar/znear;
+	float a = 32000.0/(32000.0 - 1.0);
+	float b = 32000.0 * (1.0/(1.0-32000.0));
+	//depth = (16777216.0*(a + (b/dis)));
+	
+	//depth = (zfar - znear) * ((zfar - znear/2.0)) * dis + (zfar + znear) * ((zfar - znear/2.0));
+	//depth = 1.0 / ((1.0 - zparam) * dis + zparam);
+	//depth = length(gl_Position.xyz/gl_Position.w);
+	//zfar = gl_DepthRange.far;
+	//znear = gl_DepthRange.near;
+	float ndc_depth = gl_Position.z / gl_Position.w;
+	//depth = (((zfar-znear) * ndc_depth) + znear + zfar) / 2.0;
+	//depth = (zfar - znear) * 0.5 * ndc_depth + (zfar + znear) * 0.5;
+	depth = ndc_depth;
 }
