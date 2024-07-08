@@ -287,40 +287,40 @@ for (var i = 0; i < _numTriangles; i++){
 	_nyC = _nyC == -0 ? 0 : _nyC;
 	_nzC = _nzC == -0 ? 0 : _nzC;
 	
-		//write triangle into shadow volume buffer
-		////Triangle 1
-		//buffer_write(buffShadows,buffer_f32,_xA);
-		//buffer_write(buffShadows,buffer_f32,_yA);
-		//buffer_write(buffShadows,buffer_f32,_zA);
-		//buffer_write(buffShadows,buffer_f32,_nxA);
-		//buffer_write(buffShadows,buffer_f32,_nyA);
-		//buffer_write(buffShadows,buffer_f32,_nzA);
-		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
+		////write triangle into shadow volume buffer
+		//Triangle 1
+		buffer_write(buffShadows,buffer_f32,_xA);
+		buffer_write(buffShadows,buffer_f32,_yA);
+		buffer_write(buffShadows,buffer_f32,_zA);
+		buffer_write(buffShadows,buffer_f32,_nxA);
+		buffer_write(buffShadows,buffer_f32,_nyA);
+		buffer_write(buffShadows,buffer_f32,_nzA);
+		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
 		
-		//buffer_write(buffShadows,buffer_f32,_xB);
-		//buffer_write(buffShadows,buffer_f32,_yB);
-		//buffer_write(buffShadows,buffer_f32,_zB);
-		//buffer_write(buffShadows,buffer_f32,_nxB);
-		//buffer_write(buffShadows,buffer_f32,_nyB);
-		//buffer_write(buffShadows,buffer_f32,_nzB);
-		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_f32,_xB);
+		buffer_write(buffShadows,buffer_f32,_yB);
+		buffer_write(buffShadows,buffer_f32,_zB);
+		buffer_write(buffShadows,buffer_f32,_nxB);
+		buffer_write(buffShadows,buffer_f32,_nyB);
+		buffer_write(buffShadows,buffer_f32,_nzB);
+		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
 		
-		//buffer_write(buffShadows,buffer_f32,_xC);
-		//buffer_write(buffShadows,buffer_f32,_yC);
-		//buffer_write(buffShadows,buffer_f32,_zC);
-		//buffer_write(buffShadows,buffer_f32,_nxC);
-		//buffer_write(buffShadows,buffer_f32,_nyC);
-		//buffer_write(buffShadows,buffer_f32,_nzC);
-		//buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
-		//buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_f32,_xC);
+		buffer_write(buffShadows,buffer_f32,_yC);
+		buffer_write(buffShadows,buffer_f32,_zC);
+		buffer_write(buffShadows,buffer_f32,_nxC);
+		buffer_write(buffShadows,buffer_f32,_nyC);
+		buffer_write(buffShadows,buffer_f32,_nzC);
+		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
 		
 		
 	

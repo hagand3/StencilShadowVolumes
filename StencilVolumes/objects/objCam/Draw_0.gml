@@ -24,9 +24,9 @@ gpu_set_colorwriteenable(false,false,false,false); //disable color and alpha wri
 //Stencil buffer setup
 gpu_set_stencil_enable(true); //enable stencil buffer
 gpu_set_stencil_func(cmpfunc_always); //set to always pass stencil test if depth test is passed
-//gpu_set_stencil_pass(stencilop_keep); //keep (default)
-//gpu_set_stencil_fail(stencilop_keep); //keep (default)
-//gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
+gpu_set_stencil_pass(stencilop_keep); //keep (default)
+gpu_set_stencil_fail(stencilop_keep); //keep (default)
+gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
 draw_clear_stencil(_stencil_ref_val); //clear stencil buffer to reference value
 gpu_set_stencil_ref(_stencil_ref_val); //set stencil reference value
 
