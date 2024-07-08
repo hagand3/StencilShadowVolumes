@@ -1,3 +1,7 @@
 /// @description Show/Hide Normals
 
-view_normals = !view_normals; //toggle show normals
+debug_render += 1;
+if(debug_render >= debug_renders.length)
+{
+	debug_render = 0;	
+}

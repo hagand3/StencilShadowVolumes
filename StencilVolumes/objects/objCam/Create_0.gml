@@ -16,7 +16,15 @@ enum shadow_volumes_render_techniques
 	length,
 }
 shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_pass
-view_normals = false;
+
+enum debug_renders 
+{
+	none,
+	normals,
+	shadow_volumes,
+	length,
+}
+debug_render = debug_renders.none;
 
 enum light_source_types
 {
@@ -300,6 +308,17 @@ for (var i = 0; i < _numTriangles; i++){
 		buffer_write(buffShadows,buffer_u8,0);
 		buffer_write(buffShadows,buffer_u8,0);
 		
+		buffer_write(buffShadows,buffer_f32,_xC);
+		buffer_write(buffShadows,buffer_f32,_yC);
+		buffer_write(buffShadows,buffer_f32,_zC);
+		buffer_write(buffShadows,buffer_f32,_nxC);
+		buffer_write(buffShadows,buffer_f32,_nyC);
+		buffer_write(buffShadows,buffer_f32,_nzC);
+		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(buffShadows,buffer_u8,0);
+		
 		buffer_write(buffShadows,buffer_f32,_xB);
 		buffer_write(buffShadows,buffer_f32,_yB);
 		buffer_write(buffShadows,buffer_f32,_zB);
@@ -311,16 +330,7 @@ for (var i = 0; i < _numTriangles; i++){
 		buffer_write(buffShadows,buffer_u8,0);
 		buffer_write(buffShadows,buffer_u8,0);
 		
-		buffer_write(buffShadows,buffer_f32,_xC);
-		buffer_write(buffShadows,buffer_f32,_yC);
-		buffer_write(buffShadows,buffer_f32,_zC);
-		buffer_write(buffShadows,buffer_f32,_nxC);
-		buffer_write(buffShadows,buffer_f32,_nyC);
-		buffer_write(buffShadows,buffer_f32,_nzC);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		
 		
 		
 	

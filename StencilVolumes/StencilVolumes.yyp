@@ -50,6 +50,7 @@
     {"id":{"name":"Shader6","path":"shaders/Shader6/Shader6.yy",},},
     {"id":{"name":"shd_render_shaded","path":"shaders/shd_render_shaded/shd_render_shaded.yy",},},
     {"id":{"name":"shd_test","path":"shaders/shd_test/shd_test.yy",},},
+    {"id":{"name":"shd_visualize_shadow_volumes","path":"shaders/shd_visualize_shadow_volumes/shd_visualize_shadow_volumes.yy",},},
     {"id":{"name":"spr_block_textures","path":"sprites/spr_block_textures/spr_block_textures.yy",},},
     {"id":{"name":"spr_dirt","path":"sprites/spr_dirt/spr_dirt.yy",},},
     {"id":{"name":"spr_grass","path":"sprites/spr_grass/spr_grass.yy",},},

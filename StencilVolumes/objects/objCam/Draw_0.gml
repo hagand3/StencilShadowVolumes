@@ -47,13 +47,13 @@ switch(shadow_volumes_render_technique)
 			
 				//render front-facing shadow volume polygons
 				gpu_set_cullmode(cull_counterclockwise);
-				gpu_set_stencil_pass(stencilop_incr_wrap); //increment
+				gpu_set_stencil_pass(stencilop_incr); //increment
 				//gpu_set_colorwriteenable(true,false,false,true);
 				with(objCube){drawSelfShadow();}
 		
 				//render rear-facing shadow volume polygons
 				gpu_set_cullmode(cull_clockwise);
-				gpu_set_stencil_pass(stencilop_decr_wrap); //decrement
+				gpu_set_stencil_pass(stencilop_decr); //decrement
 				//gpu_set_colorwriteenable(false,false,true,true);
 				with(objCube){drawSelfShadow();}
 		}
@@ -76,12 +76,12 @@ switch(shadow_volumes_render_technique)
 			
 				//render front-facing shadow volume polygons
 				gpu_set_cullmode(cull_clockwise);
-				gpu_set_stencil_depth_fail(stencilop_incr_wrap); //increment
+				gpu_set_stencil_depth_fail(stencilop_incr); //increment
 				with(objCube){drawSelfShadow();}
 			
 				//render rear-facing shadow volume polygons
 				gpu_set_cullmode(cull_counterclockwise);
-				gpu_set_stencil_depth_fail(stencilop_decr_wrap); //decrement
+				gpu_set_stencil_depth_fail(stencilop_decr); //decrement
 				with(objCube){drawSelfShadow();}
 		}
 		shader_reset();
@@ -124,21 +124,60 @@ gpu_set_stencil_ref(_stencil_ref_val);
 //reset for drawing main surface
 gpu_set_stencil_enable(false); //disable stencil test
 
-
-if(view_normals)
+switch(debug_render)
 {
-	//Visualize Normals
-	draw_clear_depth(1);
-	gpu_set_zwriteenable(true);
-	gpu_set_ztestenable(true);
-	draw_clear_alpha(c_purple,1.0);
-	shader_set(shd_test);
-	gpu_set_cullmode(cull_counterclockwise);
-	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	with (objCube)
+	case debug_renders.normals:
 	{
-		drawSelf();	
+		//Visualize Normals
+		draw_clear_depth(1);
+		gpu_set_zwriteenable(true);
+		gpu_set_ztestenable(true);
+		draw_clear_alpha(c_purple,1.0);
+		shader_set(shd_test);
+		gpu_set_cullmode(cull_counterclockwise);
+		vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		with (objCube)
+		{
+			drawSelf();	
+		}
+		shader_reset();
+		break;
 	}
-	shader_reset();
+	
+	case debug_renders.shadow_volumes:
+	{
+		//Visualize Shadow Volumes
+		draw_clear_depth(1);
+		gpu_set_zwriteenable(true);
+		gpu_set_ztestenable(true);
+		draw_clear_alpha(c_purple,1.0);
+		//render scene
+		gpu_set_cullmode(cull_counterclockwise);
+		vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		with (objCube)
+		{
+			drawSelf();	
+		}
+		
+		//render shadow volumes
+		//gpu_set_zwriteenable(false);
+		//gpu_set_ztestenable(false);
+		
+		shader_set(shd_visualize_shadow_volumes);
+			var _uniform = shader_get_uniform(shd_visualize_shadow_volumes, "LightPos");
+			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			gpu_set_cullmode(cull_noculling);
+			with(objCube){drawSelfShadow();}
+		shader_reset();
+		gpu_set_cullmode(cull_counterclockwise);
+		break;
+	}
+	
+	default:
+	{	
+		//do nothing
+		break;
+	}
 }
+
 

@@ -10,12 +10,12 @@ attribute vec4 in_Colour;
 uniform vec3 LightPos;
 
 const float _pi = 3.1415;
-const float large_val = 10000.0; //1000000000.0;
+const float large_val = 10.0; //1000000000.0;
 //const float large_val = 10000000000000000000.0;
 
 void main()
 {
-	vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0); //translate/rotate according to world matrix
+    vec4 pos = gm_Matrices[MATRIX_WORLD]*vec4(in_Position.xyz,1.0); //translate/rotate according to world matrix
 	vec4 normA = normalize(gm_Matrices[MATRIX_WORLD]*vec4(in_Normal,0.0)); //translate/rotate according to world matrix
 	//vec4 normA = vec4(in_Normal,0.0); //translate/rotate according to world matrix
 
@@ -33,7 +33,7 @@ void main()
 	//	pos.xyz += large_val*LightDirec;
 	//}
 	
-	//if(cap_extrude_condition > 0.5 && extrudeCondition < 0.5)
+	//if(cap_extrude_condition > 0.5 && extrudeCondition > 0.5)
 	//{
 	//	pos = vec4(0.0,0.0,-999999.0,1.0); //set to 0,0,-999999 (should be culled below visible geometry and since it has no fill)
 	//}
