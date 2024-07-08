@@ -30,6 +30,11 @@ gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
 draw_clear_stencil(_stencil_ref_val); //clear stencil buffer to reference value
 gpu_set_stencil_ref(_stencil_ref_val); //set stencil reference value
 
+////Apply camera settings
+//camera_set_view_mat(camera, cameraMat);
+//camera_set_proj_mat(camera, cameraProjMatBias);
+//camera_apply(camera);
+
 //Render shadow volumes using either depth-pass or depth-fail technique
 switch(shadow_volumes_render_technique)
 {
@@ -37,6 +42,7 @@ switch(shadow_volumes_render_technique)
 	case shadow_volumes_render_techniques.depth_pass:
 	{
 		shader_set(sh_render_shadow_volumes);
+		//gpu_set_zfunc(cmpfunc_less); //default depth testing
 		for(var _ii = 0; _ii < num_lights; _ii++)
 		{
 			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
@@ -59,6 +65,7 @@ switch(shadow_volumes_render_technique)
 		}
 		shader_reset();
 		gpu_set_stencil_pass(stencilop_keep); //reset to default (keep)
+		//gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
 		break;
 	}
 	
@@ -90,7 +97,10 @@ switch(shadow_volumes_render_technique)
 	}
 }
 
-
+////Apply camera settings
+//camera_set_view_mat(camera, cameraMat);
+//camera_set_proj_mat(camera, cameraProjMat);
+//camera_apply(camera);
 
 //draw_clear_depth(1); //clear depth buffer to zfar value
 gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
@@ -162,7 +172,6 @@ switch(debug_render)
 		//render shadow volumes
 		//gpu_set_zwriteenable(false);
 		//gpu_set_ztestenable(false);
-		
 		shader_set(shd_visualize_shadow_volumes);
 			var _uniform = shader_get_uniform(shd_visualize_shadow_volumes, "LightPos");
 			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);

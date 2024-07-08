@@ -38,6 +38,7 @@ drawSelf = function()
 
 drawSelfShadow = function()
 {
+	//var _matrix = matrix_build(x + BLOCK_SIZE/2, y + BLOCK_SIZE/2, z + BLOCK_SIZE/2, rotation_x, rotation_y, rotation_z, scale*0.99, scale*0.99, scale*0.99);
 	matrix_set(matrix_world, matrix);
 	//shader_set_uniform_matrix_array(u_Matrix, matrix_rot);
 	vertex_submit(shadow_vbuff, pr_trianglelist, -1);

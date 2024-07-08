@@ -10,7 +10,7 @@ attribute vec4 in_Colour;
 uniform vec3 LightPos;
 
 const float _pi = 3.1415;
-const float large_val = 10.0; //1000000000.0;
+const float large_val = 20.0; //1000000000.0;
 //const float large_val = 10000000000000000000.0;
 
 void main()
@@ -27,6 +27,8 @@ void main()
 	//if facing light source, set position to -99999,-999999,-9999999 to cull it away.
 	float cap_extrude_condition = step(0.5,in_Colour.r); 
 	
+	//pos.xyz -= 0.005*normA.xyz*(1.0-extrudeCondition); //if light-facing, extrude slightly away from own normal (***LEAVES CRACKS IN VOLUME. NO GOOD)
+	//pos.xyz += 0.03*LightDirec*(1.0-extrudeCondition); //if light-facing, extrude slightly away from light source (***DOESNT ADDRESS FACES PARALLEL TO LIGHT SOURCE. NO GOOD)
 	pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity if facing away from light
 	//if(cap_extrude_condition > 0.5 && extrudeCondition < 0.5) //if a non-edge triangle and facing the light, extrude with reverse winding
 	//{
