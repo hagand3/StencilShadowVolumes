@@ -15,7 +15,7 @@ gpu_set_cullmode(cull_counterclockwise); //cull counterclockwise geometry (back-
 gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
 	
 	//Render geometry to depth buffer for shadow volumes to depth-test
-	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	with (objCube){drawSelf();}
 	
 //Shadow Volume Rendering
@@ -116,7 +116,7 @@ gpu_set_stencil_ref(_stencil_ref_val);
 	
 	////Render unshaded geometry
 	//gpu_set_stencil_func(cmpfunc_equal);
-	//vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	//vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	//with (objCube)
 	//{
 	//	drawSelf();	
@@ -126,7 +126,7 @@ gpu_set_stencil_ref(_stencil_ref_val);
 	//gpu_set_cullmode(cull_noculling);
 	gpu_set_stencil_func(cmpfunc_notequal);
 	shader_set(shd_render_shaded);
-	vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	with (objCube)
 	{
 		drawSelf();	
@@ -147,7 +147,7 @@ switch(debug_render)
 		draw_clear_alpha(c_purple,1.0);
 		shader_set(shd_test);
 		gpu_set_cullmode(cull_counterclockwise);
-		vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		with (objCube)
 		{
 			drawSelf();	
@@ -165,7 +165,7 @@ switch(debug_render)
 		draw_clear_alpha(c_purple,1.0);
 		//render scene
 		gpu_set_cullmode(cull_counterclockwise);
-		vertex_submit(ground, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		with (objCube)
 		{
 			drawSelf();	

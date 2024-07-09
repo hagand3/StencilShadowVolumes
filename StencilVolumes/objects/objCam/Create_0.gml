@@ -110,8 +110,8 @@ var _z = 0;
 var _color = c_white; //default color
 
 // Create Box
-ground = vertex_create_buffer();
-vertex_begin(ground, vertex_format);
+vbuff_skybox = vertex_create_buffer();
+vertex_begin(vbuff_skybox, vertex_format);
 
 //zmin (floor)
 _z = 0;
@@ -141,13 +141,13 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y,				 _z,    0, 0, 1, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y,				 _z,    0, 0, 1, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);											    
 		//bottom triangle													    
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, 1, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y + BLOCK_SIZE, _z,    0, 0, 1, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
 	}
 }
 
@@ -179,13 +179,13 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, -1, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y,				 _z,    0, 0, -1, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);											    
 		//bottom triangle																   
-		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE,	_y + BLOCK_SIZE, _z,    0, 0, -1, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,	_y + BLOCK_SIZE, _z,    0, 0, -1, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
 	}
 }
 
@@ -217,13 +217,13 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y,	_z+BLOCK_SIZE,    0, 1, 0, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y,	_z,				  0, 1, 0, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y,	_z+BLOCK_SIZE,    0, 1, 0, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y,	_z,				  0, 1, 0, _ur, _vb, _color, 1);											    
 		//bottom triangle													   
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y, _z,			      0, 1, 0, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y, _z,               0, 1, 0, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE, _y, _z,			      0, 1, 0, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y, _z,               0, 1, 0, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
 	}
 }
 
@@ -255,13 +255,13 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x,		   _y, _z+BLOCK_SIZE,    0, -1, 0, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x,		   _y, _z,				 0, -1, 0, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,		   _y, _z+BLOCK_SIZE,    0, -1, 0, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,		   _y, _z,				 0, -1, 0, _ur, _vb, _color, 1);											    
 		//bottom triangle												   
-		vertex_add_point(ground, _x,		   _y, _z,			     0, -1, 0, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z,               0, -1, 0, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x,		   _y, _z,			     0, -1, 0, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,_y, _z,               0, -1, 0, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
 	}
 }
 
@@ -293,13 +293,13 @@ for(var _jj = 0; _jj < TILES_Y; _jj++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   1, 0, 0, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y,			_z+BLOCK_SIZE,   1, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);											    
 		//bottom triangle			 										   
-		vertex_add_point(ground, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE, _z,              1, 0, 0, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE, _z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE, _z,              1, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE, _z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
 	}
 }
 
@@ -331,16 +331,16 @@ for(var _jj = 0; _jj < TILES_Y; _jj++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   -1, 0, 0, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);											    
+		vertex_add_point(vbuff_skybox, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   -1, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);											    
 		//bottom triangle			 								   
-		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x, _y,			_z,              -1, 0, 0, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y,			_z,              -1, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(vbuff_skybox, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
 	}
 }
-vertex_end(ground);
+vertex_end(vbuff_skybox);
 
 //Create block manually
 block = vertex_create_buffer();
@@ -446,6 +446,7 @@ buffShadows = buffer_create(720, buffer_grow, 1);
 model = load_obj("cube.obj", "cube.mtl");
 //cubeBuffer = buffer_create_from_vertex_buffer(model, buffer_fixed, 1);
 cubeBuffer = buffer_create_from_vertex_buffer(block, buffer_fixed, 1);
+
 
 bufferSize = buffer_get_size(cubeBuffer);
 show_debug_message(bufferSize);
@@ -931,5 +932,7 @@ shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_form
 shadowSurface2 = 0;
 
 
-
+//freeze vertex buffers
+vertex_freeze(vbuff_skybox);
+vertex_freeze(block);
 
