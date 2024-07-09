@@ -60,7 +60,7 @@ void main()
 	//depth = length(gl_Position.xyz/gl_Position.w);
 	//zfar = gl_DepthRange.far;
 	//znear = gl_DepthRange.near;
-	float ndc_depth = gl_Position.z / gl_Position.w;
+	float ndc_depth = (gl_Position.z / gl_Position.w + 1.0)*0.5;
 	//depth = (((zfar-znear) * ndc_depth) + znear + zfar) / 2.0;
 	//depth = (zfar - znear) * 0.5 * ndc_depth + (zfar + znear) * 0.5;
 	depth = ndc_depth;
