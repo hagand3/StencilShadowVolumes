@@ -1,8 +1,8 @@
 var camera = camera_get_active();
 
-var _stencil_ref_val = 127; //stencil reference value
+var _stencil_ref_val = 0; //stencil reference value
 
-//Apply camera settings
+//Apply regular camera settings
 camera_set_view_mat(camera, cameraMat);
 camera_set_proj_mat(camera, cameraProjMat);
 camera_apply(camera);
@@ -30,10 +30,9 @@ gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
 draw_clear_stencil(_stencil_ref_val); //clear stencil buffer to reference value
 gpu_set_stencil_ref(_stencil_ref_val); //set stencil reference value
 
-////Apply camera settings
-//camera_set_view_mat(camera, cameraMat);
-//camera_set_proj_mat(camera, cameraProjMatBias);
-//camera_apply(camera);
+////Apply projection matrix with bias (offset depth of shadow volumes slightly to avoid z-clipping)
+camera_set_proj_mat(camera, cameraProjMatBias);
+camera_apply(camera);
 
 //Render shadow volumes using either depth-pass or depth-fail technique
 switch(shadow_volumes_render_technique)
@@ -101,10 +100,9 @@ switch(shadow_volumes_render_technique)
 	}
 }
 
-////Apply camera settings
-//camera_set_view_mat(camera, cameraMat);
-//camera_set_proj_mat(camera, cameraProjMat);
-//camera_apply(camera);
+////Re-apply regular camera settings
+camera_set_proj_mat(camera, cameraProjMat);
+camera_apply(camera);
 
 //draw_clear_depth(1); //clear depth buffer to zfar value
 gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing

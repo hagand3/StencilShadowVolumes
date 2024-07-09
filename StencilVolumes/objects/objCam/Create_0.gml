@@ -1,12 +1,19 @@
 global.time = 0;
 
-#macro NUM_CUBES 10
+//TODO:
+	//freeze vertex buffers
+	//build walls and ceiling
+
+#macro NUM_CUBES 50
 #macro NUM_LIGHTS 1
 
 #macro BLOCK_SIZE 8 //block size
 #macro BLOCK_SIZE_HALF 4 //block size / 2
 #macro BLOCK_MIN_Z 10
 #macro BLOCK_MAX_Z 40
+#macro TILES_X 50
+#macro TILES_Y 50
+#macro TILES_Z 50
 
 //toggles:
 enum shadow_volumes_render_techniques
@@ -53,6 +60,7 @@ yfrom = 0;
 zfrom = 80;
 cameraMat = 0;
 cameraProjMat = 0;
+cameraProjMatBias = 0;
 
 modIndex = -1;
 
@@ -96,19 +104,21 @@ moveDir = 0;
 modelMatrix = matrix_build(0, 0, -1, 0, 0, 0, 1, 1, 1);
 
 
-var _num_w = 100; //number of tiles wide for floor
-var _num_h = 100; //number of tiles tall for floor
-var _w = 8*_num_w;
-var _h = 8*_num_h;
+var _x = 0;
+var _y = 0;
+var _z = 0;
 var _color = c_white; //default color
 
-// Create ground
+// Create Box
 ground = vertex_create_buffer();
 vertex_begin(ground, vertex_format);
-for(var _ii = 0, _x; _ii < _num_w; _ii++)
+
+//zmin (floor)
+_z = 0;
+for(var _ii = 0; _ii < TILES_X; _ii++)
 {
 	_x = _ii*BLOCK_SIZE;
-	for(var _jj = 0, _y; _jj < _num_h; _jj++)
+	for(var _jj = 0; _jj < TILES_Y; _jj++)
 	{
 		_y = _jj*BLOCK_SIZE;
 		switch(irandom(1))
@@ -131,14 +141,203 @@ for(var _ii = 0, _x; _ii < _num_w; _ii++)
 		var _vb = _uvs[3];
 		
 		//top triangle
-		vertex_add_point(ground, _x,			_y,				 0,    0, 0, 1, _ul, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y,				 0,    0, 0, 1, _ur, _vt, _color, 1);
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
-																			    
+		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y,				 _z,    0, 0, 1, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);											    
 		//bottom triangle													    
-		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, 0,    0, 0, 1, _ur, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, 0,    0, 0, 1, _ul, _vb, _color, 1);
-		vertex_add_point(ground, _x,			_y,				 0,    0, 0, 1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y + BLOCK_SIZE, _z,    0, 0, 1, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, 1, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, 1, _ul, _vt, _color, 1);
+	}
+}
+
+//zmax (ceiling)
+_z = TILES_Z*BLOCK_SIZE;
+for(var _ii = 0; _ii < TILES_X; _ii++)
+{
+	_x = _ii*BLOCK_SIZE;
+	for(var _jj = 0; _jj < TILES_Y; _jj++)
+	{
+		_y = _jj*BLOCK_SIZE;
+		switch(irandom(1))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_grass,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x,			_y,				 _z,    0, 0, -1, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);											    
+		//bottom triangle																   
+		vertex_add_point(ground, _x,			_y + BLOCK_SIZE, _z,    0, 0, -1, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE,	_y + BLOCK_SIZE, _z,    0, 0, -1, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE,	_y,				 _z,    0, 0, -1, _ul, _vt, _color, 1);
+	}
+}
+
+//ymin wall
+_y = 0;
+for(var _ii = 0; _ii < TILES_X; _ii++)
+{
+	_x = _ii*BLOCK_SIZE;
+	for(var _kk = 0; _kk < TILES_Z; _kk++)
+	{
+		_z = _kk*BLOCK_SIZE;
+		switch(irandom(1))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_stone,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y,	_z+BLOCK_SIZE,    0, 1, 0, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y,	_z,				  0, 1, 0, _ur, _vb, _color, 1);											    
+		//bottom triangle													   
+		vertex_add_point(ground, _x+BLOCK_SIZE, _y, _z,			      0, 1, 0, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y, _z,               0, 1, 0, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x,			_y,	_z+BLOCK_SIZE,    0, 1, 0, _ul, _vt, _color, 1);
+	}
+}
+
+//ymax wall
+_y = TILES_Y*BLOCK_SIZE;
+for(var _ii = 0; _ii < TILES_X; _ii++)
+{
+	_x = _ii*BLOCK_SIZE;
+	for(var _kk = 0; _kk < TILES_Z; _kk++)
+	{
+		_z = _kk*BLOCK_SIZE;
+		switch(irandom(1))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_stone,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x,		   _y, _z+BLOCK_SIZE,    0, -1, 0, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x,		   _y, _z,				 0, -1, 0, _ur, _vb, _color, 1);											    
+		//bottom triangle												   
+		vertex_add_point(ground, _x,		   _y, _z,			     0, -1, 0, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z,               0, -1, 0, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x+BLOCK_SIZE,_y, _z+BLOCK_SIZE,    0, -1, 0, _ul, _vt, _color, 1);
+	}
+}
+
+//xmin wall
+_x = 0;
+for(var _jj = 0; _jj < TILES_Y; _jj++)
+{
+	_y = _jj*BLOCK_SIZE;
+	for(var _kk = 0; _kk < TILES_Z; _kk++)
+	{
+		_z = _kk*BLOCK_SIZE;
+		switch(irandom(1))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_stone,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   1, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);											    
+		//bottom triangle			 										   
+		vertex_add_point(ground, _x, _y,			_z,				 1, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE, _z,              1, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE, _z+BLOCK_SIZE,   1, 0, 0, _ul, _vt, _color, 1);
+	}
+}
+
+//xmax wall
+_x = TILES_X*BLOCK_SIZE;
+for(var _jj = 0; _jj < TILES_Y; _jj++)
+{
+	_y = _jj*BLOCK_SIZE;
+	for(var _kk = 0; _kk < TILES_Z; _kk++)
+	{
+		_z = _kk*BLOCK_SIZE;
+		switch(irandom(1))
+		{
+			case 0: 
+			{
+				var _uvs = sprite_get_uvs(spr_stone,0);
+				break;
+			}
+			case 1: 
+			{
+				var _uvs = sprite_get_uvs(spr_dirt,0);
+				break;
+			}
+		}
+		
+		var _ul = _uvs[0];
+		var _vt = _uvs[1];
+		var _ur = _uvs[2];
+		var _vb = _uvs[3];
+		
+		//top triangle
+		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z+BLOCK_SIZE,   -1, 0, 0, _ur, _vt, _color, 1);
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);											    
+		//bottom triangle			 								   
+		vertex_add_point(ground, _x, _y+BLOCK_SIZE,	_z,				 -1, 0, 0, _ur, _vb, _color, 1);
+		vertex_add_point(ground, _x, _y,			_z,              -1, 0, 0, _ul, _vb, _color, 1);
+		vertex_add_point(ground, _x, _y,			_z+BLOCK_SIZE,   -1, 0, 0, _ul, _vt, _color, 1);
 	}
 }
 vertex_end(ground);
