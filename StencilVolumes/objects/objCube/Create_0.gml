@@ -1,6 +1,6 @@
 z = -64;
 
-spd = 0.0; //0.2
+spd = 0.4; //0.2
 spd_x = random_range(-1,1);
 spd_y = random_range(-1,1);
 dir = point_direction(0,0,spd_x,spd_y);

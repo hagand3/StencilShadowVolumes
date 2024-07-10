@@ -4,7 +4,7 @@ collision_this_frame = false; //reset collision flag
 
 //invisible box
 var _r = BLOCK_SIZE*15;
-var _d = BLOCK_SIZE*50;
+var _d = BLOCK_SIZE*(TILES_X/2);
 
 //wrap position
 if(x < _d-_r and spd_x < 0)

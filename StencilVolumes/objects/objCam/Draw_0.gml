@@ -13,10 +13,17 @@ gpu_set_ztestenable(true); //enable depth testing
 gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
 gpu_set_cullmode(cull_counterclockwise); //cull counterclockwise geometry (back-faces in this case)
 gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
+draw_set_lighting(true);
+draw_light_define_ambient(c_teal);
+draw_light_define_point(0, lightArray[0], lightArray[1], lightArray[2], 100, c_white);
+draw_light_enable(0, true);
 	
 	//Render geometry to depth buffer for shadow volumes to depth-test
 	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	with (objCube){drawSelf();}
+	
+draw_set_lighting(false);
+draw_light_define_ambient(c_white);
 	
 //Shadow Volume Rendering
 gpu_set_zwriteenable(false); //disable depth writing but keep depth testing enabled
@@ -48,8 +55,7 @@ switch(shadow_volumes_render_technique)
 			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 			//shader_set_uniform_f_array(_uniform, lightArray);
-			//shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
-			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
 			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 				//render front-facing shadow volume polygons
@@ -80,8 +86,7 @@ switch(shadow_volumes_render_technique)
 			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 			//shader_set_uniform_f_array(_uniform, lightArray);
-			//shader_set_uniform_f_array(_uniform, [100*lightArray[0],100*lightArray[1],10*lightArray[2]]);
-			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
 			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 				//render front-facing shadow volume polygons
@@ -176,7 +181,7 @@ switch(debug_render)
 		//gpu_set_ztestenable(false);
 		shader_set(shd_visualize_shadow_volumes);
 			var _uniform = shader_get_uniform(shd_visualize_shadow_volumes, "LightPos");
-			shader_set_uniform_f_array(_uniform, [10*lightArray[0],10*lightArray[1],10*lightArray[2]]);
+			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
 			gpu_set_cullmode(cull_noculling);
 			with(objCube){drawSelfShadow();}
 		shader_reset();

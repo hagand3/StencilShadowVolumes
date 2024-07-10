@@ -1,19 +1,37 @@
-global.time = 0;
+
 
 //TODO:
 	//freeze vertex buffers
 	//build walls and ceiling
+	
+//Optimizations:
+	//Extend shadow volumes only as far as light radius
+	
+//Model requirements:
+	//composed of triangles (duh)
+	//closed (2-manifold) geometry
+	//consistent winding direction
+	
+//Experimental:
+	//Soft shadows through clustered light sources
+	//Soft shadows through shadow volume jittering
 
+//globals
+global.time = 0;
+
+//Macros
 #macro NUM_CUBES 50
 #macro NUM_LIGHTS 1
 
 #macro BLOCK_SIZE 8 //block size
 #macro BLOCK_SIZE_HALF 4 //block size / 2
-#macro BLOCK_MIN_Z 10
-#macro BLOCK_MAX_Z 40
+#macro BLOCK_MIN_Z 20
+#macro BLOCK_MAX_Z 60
 #macro TILES_X 50
 #macro TILES_Y 50
 #macro TILES_Z 50
+
+window_set_size(display_get_width()/2,display_get_height()/2)
 
 //toggles:
 enum shadow_volumes_render_techniques
@@ -86,7 +104,7 @@ shadow_vertex_format = vertex_format_end();
 
 
 
-lightArray = [38, 38, 5];
+lightArray = [BLOCK_SIZE*TILES_X/2, BLOCK_SIZE*TILES_Y/2, 2*BLOCK_SIZE];
 
 mouseLock = false;
 
