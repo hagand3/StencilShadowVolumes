@@ -1,8 +1,5 @@
 
-//positions
-x = 0;
-y = 0; 
-z = 0;
+z = 0; //z position
 
 //speed and direction
 spd = 0.4; //0.2

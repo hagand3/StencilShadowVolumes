@@ -1,4 +1,6 @@
 
+//BUGS:
+	//camera drifts up slowly in POV camera mode.
 
 //TODO:
 	//freeze vertex buffers [/]
@@ -22,18 +24,20 @@ global.time = 0;
 //Macros (change these as you see fit)
 	#macro NUM_CUBES 100
 	#macro NUM_LIGHTS 1
-	#macro BLOCK_MIN_Z 20 //min z spawn position for blocks
-	#macro BLOCK_MAX_Z 60 //max z spawn position for blocks
+	#macro BLOCK_MIN_Z 30 //min z spawn position for blocks
+	#macro BLOCK_MAX_Z 80 //max z spawn position for blocks
 	#macro TILES_X 50 //Area x dimension
 	#macro TILES_Y 50 //Area y dimension
 	#macro TILES_Z 50 //Area z dimension
 	//display
 	#macro DISPLAY_SCALE 1 //set to lower value if smaller screen is desired
-	#macro FULLSCREEN true //set full-screen: true/false
+	#macro FULLSCREEN false //set full-screen: true/false
 	#macro ANTI_ALIASING 0 //set AA level: 0, 2, 4, or 8
 	#macro VSYNC true //set VSYNC: true/false
 	//camera
 	#macro CAM_POV_Z_OFFSET 16 //vertical offset for POV camera
+	//debug
+	#macro DEBUG_OVERLAY true //show debug overlay
 
 //Utility Macros (you may change but don't)
 	#macro BLOCK_SIZE 8 //block size
@@ -52,7 +56,7 @@ if(FULLSCREEN)
 	window_set_fullscreen(true);
 }	else
 {
-	call_later(30,time_source_units_frames,window_center);
+	call_later(60,time_source_units_frames,window_center);
 }
 
 //toggles:
@@ -88,13 +92,22 @@ enum camera_types
 	POV,
 	length,
 }
-camera_type = camera_types.POV;
+camera_type = camera_types.orbit; //default Orbit
+look_enabled = true;
 cam_x = 0;
 cam_y = 0;
 cam_z = 0;
+xfrom = 0;
+yfrom = 0;
+zfrom = 80;
+zfrom_target = 80;
+phase = 0;
+phase_target = 0; 
 rad = 100;
+rad_target = 100;
 look_dir = 0;
 look_pitch = 0;
+
 
 
 enum light_source_types
@@ -116,12 +129,7 @@ for(var _ii = 0; _ii < num_lights; _ii++)
 	light_pos[_ii] = [_x,_y,_z];
 }
 
-z = -96;
-phase = 0;
 
-xfrom = 0;
-yfrom = 0;
-zfrom = 80;
 cameraMat = 0;
 cameraProjMat = 0;
 cameraProjMatBias = 0;
@@ -149,10 +157,8 @@ vertex_format_add_color();
 shadow_vertex_format = vertex_format_end();
 
 
-
 lightArray = [BLOCK_SIZE*TILES_X/2, BLOCK_SIZE*TILES_Y/2, 2*BLOCK_SIZE];
 
-mouseLock = false;
 
 vertexArray = [];
 normalArray = [];

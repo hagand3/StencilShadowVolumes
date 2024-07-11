@@ -11,21 +11,29 @@ switch(camera_type)
 {
 	case camera_types.orbit:
 	{
+		window_set_cursor(cr_default); //unhide cursor
 		zfrom = 80; //reset zfrom position
+		zfrom_target = 80;
 		rad = 100; //reset radius
+		rad_target = 100;
+		
 		break;
 	}
 	
 	case camera_types.POV:
 	{
-		rad = 100;
+		window_set_cursor(cr_none); //hide cursor
+		look_enabled = true;
+		//spawn in corner
+		cam_x = 0.2*TILES_X*BLOCK_SIZE;
+		cam_y = 0.2*TILES_X*BLOCK_SIZE;
 		
-		xfrom = cam_x;
-		yfrom = cam_y;
-		zfrom = cam_z + CAM_POV_Z_OFFSET;
-		xto = xfrom - rad * dcos(look_dir) * dcos(look_pitch);
-		yto = yfrom + rad * dsin(look_dir) * dcos(look_pitch);
-		zto = zfrom + rad * dsin(look_pitch);
+		look_dir = 135;
+		look_pitch = 0;
+		rad = 100;
+		rad_target = 100;
+		cam_z = 0;
+	
 		break;
 	}	
 }

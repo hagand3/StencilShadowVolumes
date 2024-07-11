@@ -1,14 +1,16 @@
 //Create cubes
 repeat(NUM_CUBES)
 {
-	//var _ii = random_range(-5,5);
-	//var _jj = random_range(-5,5);
-	//var _z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
 	var _cube = instance_create_depth(random(BLOCK_SIZE*TILES_X), random(BLOCK_SIZE*TILES_Y), 0, objCube);
-	//_cube.model = model;
-	//_cube.scale = BLOCK_SIZE;
 	_cube.model = block;
-	//_cube.scale = 1;
 	_cube.shadow_vbuff = shadowVBuffer;
 	_cube.z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
+}
+
+if(DEBUG_OVERLAY)
+{
+	call_later(60,time_source_units_frames,function()
+	{
+		show_debug_overlay(true,false,1);
+	});
 }
