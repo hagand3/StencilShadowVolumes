@@ -179,6 +179,7 @@ switch(debug_render)
 		//render shadow volumes
 		//gpu_set_zwriteenable(false);
 		//gpu_set_ztestenable(false);
+		gpu_set_blendmode(bm_add);
 		shader_set(shd_visualize_shadow_volumes);
 			var _uniform = shader_get_uniform(shd_visualize_shadow_volumes, "LightPos");
 			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
@@ -186,6 +187,7 @@ switch(debug_render)
 			with(objCube){drawSelfShadow();}
 		shader_reset();
 		gpu_set_cullmode(cull_counterclockwise);
+		gpu_set_blendmode(bm_normal);
 		break;
 	}
 	

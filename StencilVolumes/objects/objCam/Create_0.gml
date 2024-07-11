@@ -1,8 +1,8 @@
 
 
 //TODO:
-	//freeze vertex buffers
-	//build walls and ceiling
+	//freeze vertex buffers [/]
+	//build walls and ceiling [/]
 	
 //Optimizations:
 	//Extend shadow volumes only as far as light radius
@@ -19,29 +19,48 @@
 //globals
 global.time = 0;
 
-//Macros
-#macro NUM_CUBES 50
-#macro NUM_LIGHTS 1
+//Macros (change these as you see fit)
+	#macro NUM_CUBES 100
+	#macro NUM_LIGHTS 1
+	#macro BLOCK_MIN_Z 20 //min z spawn position for blocks
+	#macro BLOCK_MAX_Z 60 //max z spawn position for blocks
+	#macro TILES_X 50 //Area x dimension
+	#macro TILES_Y 50 //Area y dimension
+	#macro TILES_Z 50 //Area z dimension
+	//display
+	#macro DISPLAY_SCALE 1 //set to lower value if smaller screen is desired
+	#macro FULLSCREEN true //set full-screen: true/false
+	#macro ANTI_ALIASING 0 //set AA level: 0, 2, 4, or 8
+	#macro VSYNC true //set VSYNC: true/false
+	//camera
+	#macro CAM_POV_Z_OFFSET 16 //vertical offset for POV camera
 
-#macro BLOCK_SIZE 8 //block size
-#macro BLOCK_SIZE_HALF 4 //block size / 2
-#macro BLOCK_MIN_Z 20
-#macro BLOCK_MAX_Z 60
-#macro TILES_X 50
-#macro TILES_Y 50
-#macro TILES_Z 50
+//Utility Macros (you may change but don't)
+	#macro BLOCK_SIZE 8 //block size
+	#macro BLOCK_SIZE_HALF 4 //block size/2 (because forward slashes are a precious resource)
 
-window_set_size(display_get_width()/2,display_get_height()/2)
+//Adjust Display
+var _w = display_get_width()*DISPLAY_SCALE;
+var _h = display_get_height()*DISPLAY_SCALE;
+window_set_size(_w,_h); //set window size
+surface_resize(application_surface,_w,_h); //set application surface size
+display_reset(ANTI_ALIASING,VSYNC);
+
+//toggle full-screen or screen center
+if(FULLSCREEN)
+{
+	window_set_fullscreen(true);
+}	else
+{
+	call_later(30,time_source_units_frames,window_center);
+}
 
 //toggles:
-enum shadow_volumes_render_techniques
-{
-	depth_pass,
-	depth_fail,
-	length,
-}
-shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_pass
 
+//(F2) Rendering View
+	//Regular (none)
+	//Normals
+	//Shadow Volume geometry (partially extruded)
 enum debug_renders 
 {
 	none,
@@ -50,6 +69,33 @@ enum debug_renders
 	length,
 }
 debug_render = debug_renders.none;
+
+//(F3) Shadow Volume rendering technique:
+	//Z-Pass requires less geometry but will invert shadows if camera is inside shadow volume
+	//Z-Fail requires light and dark caps (duplicate model geometry) but allows camera to be inside shadow volume.
+enum shadow_volumes_render_techniques
+{
+	depth_pass,
+	depth_fail,
+	length,
+}
+shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_pass
+
+//(F4) Camera View Type (orbiting or POV)
+enum camera_types
+{
+	orbit,
+	POV,
+	length,
+}
+camera_type = camera_types.POV;
+cam_x = 0;
+cam_y = 0;
+cam_z = 0;
+rad = 100;
+look_dir = 0;
+look_pitch = 0;
+
 
 enum light_source_types
 {
@@ -72,7 +118,7 @@ for(var _ii = 0; _ii < num_lights; _ii++)
 
 z = -96;
 phase = 0;
-rad = 100;
+
 xfrom = 0;
 yfrom = 0;
 zfrom = 80;
