@@ -1,5 +1,5 @@
-//Create cubes
-repeat(NUM_CUBES)
+//Create blocks
+repeat(NUM_BLOCKS)
 {
 	var _cube = instance_create_depth(random(BLOCK_SIZE*TILES_X), random(BLOCK_SIZE*TILES_Y), 0, objCube);
 	_cube.model = block;

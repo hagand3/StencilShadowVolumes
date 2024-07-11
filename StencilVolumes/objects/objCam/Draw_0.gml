@@ -49,7 +49,7 @@ switch(shadow_volumes_render_technique)
 	{
 		shader_set(sh_render_shadow_volumes);
 		//gpu_set_zfunc(cmpfunc_less); //default depth testing
-		for(var _ii = 0; _ii < num_lights; _ii++)
+		for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
 		{
 			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
@@ -80,7 +80,7 @@ switch(shadow_volumes_render_technique)
 	case shadow_volumes_render_techniques.depth_fail:
 	{
 		shader_set(sh_render_shadow_volumes);
-		for(var _ii = 0; _ii < num_lights; _ii++)
+		for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
 		{
 			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");

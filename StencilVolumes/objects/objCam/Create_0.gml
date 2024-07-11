@@ -22,7 +22,7 @@
 global.time = 0;
 
 //Macros (change these as you see fit)
-	#macro NUM_CUBES 100
+	#macro NUM_BLOCKS 100
 	#macro NUM_LIGHTS 1
 	#macro BLOCK_MIN_Z 30 //min z spawn position for blocks
 	#macro BLOCK_MAX_Z 80 //max z spawn position for blocks
@@ -56,7 +56,7 @@ if(FULLSCREEN)
 	window_set_fullscreen(true);
 }	else
 {
-	call_later(60,time_source_units_frames,window_center);
+	call_later(10,time_source_units_frames,window_center);
 }
 
 //toggles:
@@ -108,20 +108,12 @@ rad_target = 100;
 look_dir = 0;
 look_pitch = 0;
 
+//Lights
 
-
-enum light_source_types
-{
-	single,
-	multiple,
-	length,
-}
-light_source_type = light_source_types.single
-num_lights = NUM_LIGHTS;
 
 //initialize lights
 light_pos = [];
-for(var _ii = 0; _ii < num_lights; _ii++)
+for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
 {
 	var _x = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
 	var _y = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
