@@ -47,8 +47,6 @@
     {"id":{"name":"sh_depth","path":"shaders/sh_depth/sh_depth.yy",},},
     {"id":{"name":"sh_render_shadow_volumes","path":"shaders/sh_render_shadow_volumes/sh_render_shadow_volumes.yy",},},
     {"id":{"name":"sh_shadow","path":"shaders/sh_shadow/sh_shadow.yy",},},
-    {"id":{"name":"Shader6","path":"shaders/Shader6/Shader6.yy",},},
-    {"id":{"name":"shd_render_shaded","path":"shaders/shd_render_shaded/shd_render_shaded.yy",},},
     {"id":{"name":"shd_test","path":"shaders/shd_test/shd_test.yy",},},
     {"id":{"name":"shd_visualize_shadow_volumes","path":"shaders/shd_visualize_shadow_volumes/shd_visualize_shadow_volumes.yy",},},
     {"id":{"name":"spr_block_textures","path":"sprites/spr_block_textures/spr_block_textures.yy",},},

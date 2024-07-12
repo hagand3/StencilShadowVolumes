@@ -1,142 +1,56 @@
-var camera = camera_get_active();
-
-var _stencil_ref_val = 0; //stencil reference value
+camera = camera_get_active();
 
 //Apply regular camera settings
 camera_set_view_mat(camera, cameraMat);
 camera_set_proj_mat(camera, cameraProjMat);
 camera_apply(camera);
 
-draw_clear_alpha(c_purple,0.0); //clear surface color and alpha
-gpu_set_zwriteenable(true); //enable depth buffer writing
-gpu_set_ztestenable(true); //enable depth testing
-gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
-gpu_set_cullmode(cull_counterclockwise); //cull counterclockwise geometry (back-faces in this case)
-gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
-draw_set_lighting(true);
-draw_light_define_ambient(c_teal);
-draw_light_define_point(0, lightArray[0], lightArray[1], lightArray[2], 100, c_white);
-draw_light_enable(0, true);
-	
-	//Render geometry to depth buffer for shadow volumes to depth-test
-	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	with (objCube){drawSelf();}
-	
-draw_set_lighting(false);
-draw_light_define_ambient(c_white);
-	
-//Shadow Volume Rendering
-gpu_set_zwriteenable(false); //disable depth writing but keep depth testing enabled
-gpu_set_colorwriteenable(false,false,false,false); //disable color and alpha writing
-//Stencil buffer setup
-gpu_set_stencil_enable(true); //enable stencil buffer
-gpu_set_stencil_func(cmpfunc_always); //set to always pass stencil test if depth test is passed
-gpu_set_stencil_pass(stencilop_keep); //keep (default)
-gpu_set_stencil_fail(stencilop_keep); //keep (default)
-gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
-draw_clear_stencil(_stencil_ref_val); //clear stencil buffer to reference value
-gpu_set_stencil_ref(_stencil_ref_val); //set stencil reference value
+//Main Rendering Pipeline
 
-////Apply projection matrix with bias (offset depth of shadow volumes slightly to avoid z-clipping)
-camera_set_proj_mat(camera, cameraProjMatBias);
-camera_apply(camera);
+render_ambient_pass(); //render geometry with ambient light only
 
-//Render shadow volumes using either depth-pass or depth-fail technique
-switch(shadow_volumes_render_technique)
-{
-	//Depth Pass:
-	case shadow_volumes_render_techniques.depth_pass:
-	{
-		shader_set(sh_render_shadow_volumes);
-		//gpu_set_zfunc(cmpfunc_less); //default depth testing
-		for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-		{
-			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
-			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
-			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
-			//shader_set_uniform_f_array(_uniform, lightArray);
-			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
-			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
-			
-				//render front-facing shadow volume polygons
-				gpu_set_cullmode(cull_counterclockwise);
-				gpu_set_stencil_pass(stencilop_incr); //increment
-				//gpu_set_colorwriteenable(true,false,false,true);
-				with(objCube){drawSelfShadow();}
-		
-				//render rear-facing shadow volume polygons
-				gpu_set_cullmode(cull_clockwise);
-				gpu_set_stencil_pass(stencilop_decr); //decrement
-				//gpu_set_colorwriteenable(false,false,true,true);
-				with(objCube){drawSelfShadow();}
-		}
-		shader_reset();
-		gpu_set_stencil_pass(stencilop_keep); //reset to default (keep)
-		//gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
-		break;
-	}
+//For each light source:
+render_shadow_volumes(); //render shadow volumes to stencil buffer
+
+
+
+
+
 	
-	//Depth Fail:
-	case shadow_volumes_render_techniques.depth_fail:
-	{
-		shader_set(sh_render_shadow_volumes);
-		for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-		{
-			var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
-			var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
-			//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
-			//shader_set_uniform_f_array(_uniform, lightArray);
-			shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
-			shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
-			
-				//render front-facing shadow volume polygons
-				gpu_set_cullmode(cull_clockwise);
-				gpu_set_stencil_depth_fail(stencilop_incr); //increment
-				with(objCube){drawSelfShadow();}
-			
-				//render rear-facing shadow volume polygons
-				gpu_set_cullmode(cull_counterclockwise);
-				gpu_set_stencil_depth_fail(stencilop_decr); //decrement
-				with(objCube){drawSelfShadow();}
-		}
-		shader_reset();
-		gpu_set_stencil_depth_fail(stencilop_keep); //reset to default (keep)
-		break;
-	}
-}
 
-////Re-apply regular camera settings
+
+//Re-apply regular camera settings
 camera_set_proj_mat(camera, cameraProjMat);
 camera_apply(camera);
 
-//draw_clear_depth(1); //clear depth buffer to zfar value
 gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
-gpu_set_zwriteenable(true); //enable depth writing
+//gpu_set_zwriteenable(true); //enable depth writing
 gpu_set_ztestenable(true); //enable depth testing
 gpu_set_cullmode(cull_counterclockwise); //set cull mode to counterclockwise (back-faces)
-//gpu_set_stencil_pass(stencilop_keep); //keep
-//gpu_set_stencil_fail(stencilop_keep); //keep
-//gpu_set_stencil_depth_fail(stencilop_keep); //keep
-gpu_set_stencil_ref(_stencil_ref_val);
+gpu_set_stencil_ref(STENCIL_REF_VAL);
 	
-	////Render unshaded geometry
-	//gpu_set_stencil_func(cmpfunc_equal);
-	//vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	//with (objCube)
-	//{
-	//	drawSelf();	
-	//}
+	draw_set_lighting(true); //reactivate lighting (ambient term should still be set to c_black, meaning no additional ambient light is rendered)
+	draw_light_define_point(0, lightArray[0], lightArray[1], lightArray[2], 100, c_red); //define point source from light struct
+	draw_light_enable(0, true); //enable light source
+	
+	//Render unshaded geometry
+	gpu_set_stencil_func(cmpfunc_equal);
+	gpu_set_blendmode(bm_add); //set additive blend mode
+	with (objCube){drawSelf();}
+	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	gpu_set_blendmode(bm_normal);
+	
+	draw_light_enable(0,false); //disable point source
+	draw_set_lighting(false); //disable lighting
 	
 	//Render shaded geometry
-	//gpu_set_cullmode(cull_noculling);
 	gpu_set_stencil_func(cmpfunc_notequal);
-	shader_set(shd_render_shaded);
+	//shader_set(shd_render_shaded);
+	gpu_set_blendmode(bm_subtract);
+	with (objCube){drawSelf();}
 	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	with (objCube)
-	{
-		drawSelf();	
-	}
-	shader_reset();
+	gpu_set_blendmode(bm_normal);
+	//shader_reset();
 
 //reset for drawing main surface
 gpu_set_stencil_enable(false); //disable stencil test
@@ -152,11 +66,8 @@ switch(debug_render)
 		draw_clear_alpha(c_purple,1.0);
 		shader_set(shd_test);
 		gpu_set_cullmode(cull_counterclockwise);
+		with (objCube){drawSelf();}
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-		with (objCube)
-		{
-			drawSelf();	
-		}
 		shader_reset();
 		break;
 	}
@@ -170,11 +81,8 @@ switch(debug_render)
 		draw_clear_alpha(c_purple,1.0);
 		//render scene
 		gpu_set_cullmode(cull_counterclockwise);
+		with (objCube){drawSelf();}
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-		with (objCube)
-		{
-			drawSelf();	
-		}
 		
 		//render shadow volumes
 		//gpu_set_zwriteenable(false);

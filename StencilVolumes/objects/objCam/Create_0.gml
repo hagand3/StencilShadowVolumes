@@ -5,6 +5,9 @@
 //TODO:
 	//freeze vertex buffers [/]
 	//build walls and ceiling [/]
+	//Create light constructor
+	//Add debug view inspector for lighting
+	//Add multiple lights
 	
 //Optimizations:
 	//Extend shadow volumes only as far as light radius
@@ -40,6 +43,7 @@ global.time = 0;
 	#macro DEBUG_OVERLAY true //show debug overlay
 
 //Utility Macros (you may change but don't)
+	#macro STENCIL_REF_VAL 0 //stencil buffer reference value 
 	#macro BLOCK_SIZE 8 //block size
 	#macro BLOCK_SIZE_HALF 4 //block size/2 (because forward slashes are a precious resource)
 
@@ -93,6 +97,7 @@ enum camera_types
 	length,
 }
 camera_type = camera_types.orbit; //default Orbit
+camera = -1;
 look_enabled = true;
 cam_x = 0;
 cam_y = 0;
@@ -109,7 +114,28 @@ look_dir = 0;
 look_pitch = 0;
 
 //Lights
+ambient_col = c_teal; //ambient color
 
+function light(_x,_y,_z,_radius,_color) constructor
+{
+	//enable flag
+	enabled = true;
+	
+	//position
+	x = _x;
+	y = _y;
+	z = _z;
+	
+	//radius
+	radius = _radius;
+	
+	//color
+	color = _color;
+	
+	//update method (run each step event)
+	update = function(){}
+	
+}
 
 //initialize lights
 light_pos = [];
@@ -997,4 +1023,114 @@ shadowSurface2 = 0;
 //freeze vertex buffers
 vertex_freeze(vbuff_skybox);
 vertex_freeze(block);
+
+#region Drawing Methods
+
+//Render Ambient Pass
+render_ambient_pass = function()
+{
+	draw_clear_alpha(c_purple,0.0); //clear surface color and alpha
+	gpu_set_zwriteenable(true); //enable depth buffer writing
+	gpu_set_ztestenable(true); //enable depth testing
+	gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
+	gpu_set_cullmode(cull_counterclockwise); //cull counterclockwise geometry (back-faces in this case)
+	gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
+	draw_set_lighting(true); //enable lighting (ambient only)
+	draw_light_define_ambient(ambient_col); //set ambient color
+	
+		//Render geometry to depth buffer for shadow volumes to depth-test
+		with (objCube){drawSelf();}
+		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
+	
+	draw_light_define_ambient(c_black);	//set ambient to black (no ambient) for future passes involving lighting
+	draw_set_lighting(false); //disable lighting
+	
+	
+}
+
+//Render Shadow Volumes to surface
+render_shadow_volumes = function()
+{
+	//Shadow Volume Rendering
+	gpu_set_zwriteenable(false); //disable depth writing but keep depth testing enabled
+	gpu_set_colorwriteenable(false,false,false,false); //disable color and alpha writing
+	//Stencil buffer setup
+	gpu_set_stencil_enable(true); //enable stencil buffer
+	gpu_set_stencil_func(cmpfunc_always); //set to always pass stencil test if depth test is passed
+	gpu_set_stencil_pass(stencilop_keep); //keep (default)
+	gpu_set_stencil_fail(stencilop_keep); //keep (default)
+	gpu_set_stencil_depth_fail(stencilop_keep); //keep (default)
+	draw_clear_stencil(STENCIL_REF_VAL); //clear stencil buffer to reference value
+	gpu_set_stencil_ref(STENCIL_REF_VAL); //set stencil reference value
+
+	////Apply projection matrix with bias (offset depth of shadow volumes slightly to avoid z-clipping)
+	camera_set_proj_mat(camera, cameraProjMatBias);
+	camera_apply(camera);
+
+	//Render shadow volumes using either depth-pass or depth-fail technique
+	switch(shadow_volumes_render_technique)
+	{
+		//Depth Pass:
+		case shadow_volumes_render_techniques.depth_pass:
+		{
+			shader_set(sh_render_shadow_volumes);
+			//gpu_set_zfunc(cmpfunc_less); //default depth testing
+			for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
+			{
+				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
+				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
+				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
+				//shader_set_uniform_f_array(_uniform, lightArray);
+				shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
+				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
+			
+					//render front-facing shadow volume polygons
+					gpu_set_cullmode(cull_counterclockwise);
+					gpu_set_stencil_pass(stencilop_incr); //increment
+					//gpu_set_colorwriteenable(true,false,false,true);
+					with(objCube){drawSelfShadow();}
+		
+					//render rear-facing shadow volume polygons
+					gpu_set_cullmode(cull_clockwise);
+					gpu_set_stencil_pass(stencilop_decr); //decrement
+					//gpu_set_colorwriteenable(false,false,true,true);
+					with(objCube){drawSelfShadow();}
+			}
+			shader_reset();
+			gpu_set_stencil_pass(stencilop_keep); //reset to default (keep)
+			//gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
+			break;
+		}
+	
+		//Depth Fail:
+		case shadow_volumes_render_techniques.depth_fail:
+		{
+			shader_set(sh_render_shadow_volumes);
+			for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
+			{
+				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
+				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
+				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
+				//shader_set_uniform_f_array(_uniform, lightArray);
+				shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
+				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
+			
+					//render front-facing shadow volume polygons
+					gpu_set_cullmode(cull_clockwise);
+					gpu_set_stencil_depth_fail(stencilop_incr); //increment
+					with(objCube){drawSelfShadow();}
+			
+					//render rear-facing shadow volume polygons
+					gpu_set_cullmode(cull_counterclockwise);
+					gpu_set_stencil_depth_fail(stencilop_decr); //decrement
+					with(objCube){drawSelfShadow();}
+			}
+			shader_reset();
+			gpu_set_stencil_depth_fail(stencilop_keep); //reset to default (keep)
+			break;
+		}
+	}
+}
+
+#endregion
 
