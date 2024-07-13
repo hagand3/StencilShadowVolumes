@@ -9,9 +9,9 @@ repeat(NUM_BLOCKS)
 
 if(DEBUG_OVERLAY)
 {
-	call_later(60,time_source_units_frames,function()
+	call_later(20,time_source_units_frames,function()
 	{
-		show_debug_overlay(true,false,1);
+		show_debug_overlay(true,true,1);
 	});
 }
 

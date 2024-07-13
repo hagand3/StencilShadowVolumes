@@ -91,7 +91,7 @@ enum shadow_volumes_render_techniques
 	depth_fail,
 	length,
 }
-shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_pass
+shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_fail;
 
 //(F4) Camera View Type (orbiting or POV)
 enum camera_types
