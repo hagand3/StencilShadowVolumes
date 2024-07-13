@@ -11,8 +11,7 @@ uniform vec3 LightPos;
 uniform vec3 Eye;
 
 const float _pi = 3.1415;
-const float large_val = 10000.0; //1000000000.0;
-//const float large_val = 10000000000000000000.0;
+const float extrusion_distance = 10000.0; //sufficiently large to extrude shadow volumes but not too large (will lead to precision issues)
 
 void main()
 {
@@ -30,10 +29,10 @@ void main()
 	
 	//pos.xyz -= 0.005*normA.xyz*(1.0-extrudeCondition); //if light-facing, extrude slightly away from own normal (***LEAVES CRACKS IN VOLUME. NO GOOD)
 	//pos.xyz += 0.03*LightDirec*(1.0-extrudeCondition); //if light-facing, extrude slightly away from light source (***DOESNT ADDRESS FACES PARALLEL TO LIGHT SOURCE. NO GOOD)
-	pos.xyz += large_val*LightDirec*extrudeCondition; //extrude along light direction towards infinity if facing away from light
+	pos.xyz += extrusion_distance*LightDirec*extrudeCondition; //extrude along light direction towards infinity if facing away from light
 	//if(cap_extrude_condition > 0.5 && extrudeCondition < 0.5) //if a non-edge triangle and facing the light, extrude with reverse winding
 	//{
-	//	pos.xyz += large_val*LightDirec;
+	//	pos.xyz += extrusion_distance*LightDirec;
 	//}
 	
 	//if(cap_extrude_condition > 0.5 && extrudeCondition < 0.5)

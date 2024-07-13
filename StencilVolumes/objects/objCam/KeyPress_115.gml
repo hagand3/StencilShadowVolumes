@@ -14,6 +14,8 @@ switch(camera_type)
 		window_set_cursor(cr_default); //unhide cursor
 		zfrom = 80; //reset zfrom position
 		zfrom_target = 80;
+		look_dir = 135;
+		look_dir_target = 135;
 		rad = 100; //reset radius
 		rad_target = 100;
 		

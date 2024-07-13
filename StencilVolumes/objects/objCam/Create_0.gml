@@ -3,11 +3,7 @@
 	//camera drifts up slowly in POV camera mode.
 
 //TODO:
-	//freeze vertex buffers [/]
-	//build walls and ceiling [/]
-	//Create light constructor
 	//Add debug view inspector for lighting
-	//Add multiple lights
 	
 //Optimizations:
 	//Extend shadow volumes only as far as light radius
@@ -21,10 +17,17 @@
 	//Soft shadows through clustered light sources
 	//Soft shadows through shadow volume jittering
 
-//globals
+//Init 
 global.time = 0;
 
-//Macros (change these as you see fit)
+gpu_set_ztestenable(true);
+gpu_set_zwriteenable(true);
+
+gpu_set_alphatestenable(true);
+gpu_set_alphatestref(0.5);
+
+#region Macros (change these as you see fit)
+
 	#macro NUM_BLOCKS 100
 	#macro NUM_LIGHTS 7 //max 7
 	#macro BLOCK_MIN_Z 30 //min z spawn position for blocks
@@ -41,17 +44,24 @@ global.time = 0;
 	#macro ANTI_ALIASING 0 //set AA level: 0, 2, 4, or 8
 	#macro VSYNC true //set VSYNC: true/false
 	//camera
+	#macro CAM_POV_MOVE_SPEED 1 //move speed in POV mode
 	#macro CAM_POV_Z_OFFSET 16 //vertical offset for POV camera
-	#macro LOOK_SENSITIVITY 0.01 //lower values, smoother look sensitivity
+	#macro LOOK_SENSITIVITY 0.05 //lower values, smoother look sensitivity
 	//debug
 	#macro DEBUG_OVERLAY true //show debug overlay
+	
+#endregion
 
-//Utility Macros (you may change but don't)
+#region Utility Macros (you may change but don't)
+
 	#macro STENCIL_REF_VAL 0 //stencil buffer reference value 
 	#macro BLOCK_SIZE 8 //block size
 	#macro BLOCK_SIZE_HALF 4 //block size/2 (because forward slashes are a precious resource)
+	
+#endregion 
 
-//Adjust Display
+#region Adjust Display
+
 var _w = display_get_width()*DISPLAY_SCALE;
 var _h = display_get_height()*DISPLAY_SCALE;
 window_set_size(_w,_h); //set window size
@@ -67,101 +77,95 @@ if(FULLSCREEN)
 	call_later(10,time_source_units_frames,window_center);
 }
 
-//toggles:
+#endregion
+
+#region Toggles
 
 //(F2) Rendering View
-	//Regular (none)
-	//Normals
-	//Shadow Volume geometry (partially extruded)
 enum debug_renders 
 {
-	none,
-	normals,
-	shadow_volumes,
+	none, //no debug rendering (regular rendering)
+	normals, //render normals
+	shadow_volumes, //render shadow volume geometry
 	length,
 }
-debug_render = debug_renders.none;
+debug_render = debug_renders.none; //default to no debug rendering
+debug_light_source_idx = 0; //light source index
 
 //(F3) Shadow Volume rendering technique:
-	//Z-Pass requires less geometry but will invert shadows if camera is inside shadow volume
-	//Z-Fail requires light and dark caps (duplicate model geometry) but allows camera to be inside shadow volume.
 enum shadow_volumes_render_techniques
 {
-	depth_pass,
-	depth_fail,
+	depth_pass, //Depth-Pass (Z-Pass) requires less geometry but will invert shadows if camera is inside shadow volume
+	depth_fail, //Depth-Fail (Z-Fail) requires light and dark caps (duplicate model geometry) but allows camera to be inside shadow volume.
 	length,
 }
-shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_fail;
+shadow_volumes_render_technique = shadow_volumes_render_techniques.depth_fail; //default to depth fail
 
-//(F4) Camera View Type (orbiting or POV)
+//(F4) Camera View Type
 enum camera_types
 {
-	orbit,
-	POV,
+	orbit, //camera orbits
+	POV, //first-person POV
 	length,
 }
 camera_type = camera_types.orbit; //default Orbit
-camera = -1;
-look_enabled = true;
-look_sensitivity = LOOK_SENSITIVITY;
-cam_x = 0;
-cam_y = 0;
-cam_z = 0;
-xfrom = 0;
-yfrom = 0;
-zfrom = 80;
-zfrom_target = 80;
-phase = 0;
-phase_target = 0; 
-rad = 100;
-rad_target = 100;
-look_dir = 0;
-look_dir_target = 0;
-look_pitch = 0;
-look_pitch_target = 0;
+
+#endregion
+
+#region Camera
+
+camera = -1; //camera index
+look_enabled = true; //look-enable flag (toggle with tab)
+look_sensitivity = LOOK_SENSITIVITY; //look sensitivity
+cam_x = 0; //camera position x
+cam_y = 0; //camera position y
+cam_z = 0; //camera position z
+xto = 0; //xto for matrix_build_lookat
+yto = 0; //yto for matrix_build_lookat
+zto = 0; //zto for matrix_build_lookat
+xfrom = 0; //xfrom for matrix_build_lookat
+yfrom = 0; //yfrom for matrix_build_lookat
+zfrom = 80; //zfrom for matrix_build_lookat
+zfrom_target = 80; //zfrom target for smooth lerp
+rad = 100; //radius
+rad_target = 100; //radius target for smooth lerp
+look_dir = 135; //look direction
+look_dir_target = 135; //look direction target for smooth lerp
+look_pitch = 0; //look pitch
+look_pitch_target = 0; //look pitch target for smooth lerp
+
+//camera matrices
+cam_view_matrix = 0; //camera view matrix
+cam_proj_matrix = 0; //camera projection matrix
+cam_proj_bias_matrix = 0; //camera biased projection matrix (slightly different zfar value to combat z-fighting of shadow volumes with geometry)
+
+#endregion
 
 #region Lights
 ambient_col = AMBIENT_COL_DEFAULT; //ambient color
 
 function light(_x,_y,_z,_radius,_color) constructor
 {
-	//enable flag
-	enabled = true;
+	x = _x; //position x
+	y = _y; //position y
+	z = _z; //position z
+	radius = _radius; //radius
+	color = _color; //color
+	idx = 0; //index
 	
-	//position
-	x = _x;
-	y = _y;
-	z = _z;
-	
-	//radius
-	radius = _radius;
-	
-	//color
-	color = _color;
-	
-	//update method (run each step event)
-	update = function(){}
-	
-	//index
-	idx = 0;
+	enabled = true; //enable flag (unused)
+	update = function(){}; //update method run each step (unused)
 }
-
-lights = [];
+lights = []; //array to hold light structs
 
 #endregion
 
-cameraMat = 0;
-cameraProjMat = 0;
-cameraProjMatBias = 0;
+
 
 modIndex = -1;
 
 
-gpu_set_ztestenable(true);
-gpu_set_zwriteenable(true);
 
-gpu_set_alphatestenable(true);
-gpu_set_alphatestref(0.5);
 
 vertex_format_begin();
 vertex_format_add_position_3d();
@@ -1062,7 +1066,7 @@ render_shadow_volumes = function(_light)
 	gpu_set_stencil_ref(STENCIL_REF_VAL); //set stencil reference value
 
 	////Apply projection matrix with bias (offset depth of shadow volumes slightly to avoid z-clipping)
-	camera_set_proj_mat(camera, cameraProjMatBias);
+	camera_set_proj_mat(camera, cam_proj_bias_matrix);
 	camera_apply(camera);
 
 	//Render shadow volumes using either depth-pass or depth-fail technique
@@ -1134,7 +1138,7 @@ render_shadow_volumes = function(_light)
 render_lighting_pass = function(_light)
 {
 	//Re-apply regular camera settings
-	camera_set_proj_mat(camera, cameraProjMat);
+	camera_set_proj_mat(camera, cam_proj_matrix);
 	camera_apply(camera);
 
 	gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
