@@ -29,23 +29,21 @@ scale = 1; //model scale
 //world matrix
 matrix = -1;
 
-//Cube model and shadow vertex buffer
-//model = load_obj("cube.obj", "cube.mtl");
-model = 0;
-shadow_vbuff = 0;
-
+//Vertex buffers
+model = 0; //block geometry
+shadow_vbuff = 0; //block shadow volume
 
 //Method to draw self with matrix applied (position, rotation, and scale applied)
 drawSelf = function()
 {
 	matrix_set(matrix_world, matrix);
 	vertex_submit(model, pr_trianglelist, sprite_get_texture(spr_stone, 0));
-	matrix_set(matrix_world, matrix_build_identity());
+	//matrix_set(matrix_world, matrix_build_identity());
 }
 //Method to draw shadow with matrix applied (position, rotation, and scale applied)
 drawSelfShadow = function()
 {
 	matrix_set(matrix_world, matrix);
 	vertex_submit(shadow_vbuff, pr_trianglelist, -1);
-	matrix_set(matrix_world, matrix_build_identity());
+	//matrix_set(matrix_world, matrix_build_identity());
 }

@@ -1,9 +1,9 @@
 {
   "$GMScript":"v1",
-  "%Name":"Script1",
+  "%Name":"vertex_functions",
   "isCompatibility":false,
   "isDnD":false,
-  "name":"Script1",
+  "name":"vertex_functions",
   "parent":{
     "name":"Scripts",
     "path":"folders/Scripts.yy",

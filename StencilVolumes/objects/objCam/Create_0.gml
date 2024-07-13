@@ -3,6 +3,7 @@
 	//camera drifts up slowly in POV camera mode.
 
 //TODO:
+	//Create separate shadow volumes buffer for z-pass
 	//Add debug view inspector for lighting
 	
 //Optimizations:
@@ -20,11 +21,10 @@
 //Init 
 global.time = 0;
 
-gpu_set_ztestenable(true);
-gpu_set_zwriteenable(true);
-
-gpu_set_alphatestenable(true);
-gpu_set_alphatestref(0.5);
+gpu_set_ztestenable(true); //enable depth testing
+gpu_set_zwriteenable(true); //enable depth writing 
+gpu_set_alphatestenable(true); //enable alpha testing
+gpu_set_alphatestref(0.5); //set alpha testing reference
 
 #region Macros (change these as you see fit)
 
@@ -54,9 +54,22 @@ gpu_set_alphatestref(0.5);
 
 #region Utility Macros (you may change but don't)
 
+	//Stencil buffer stuff
 	#macro STENCIL_REF_VAL 0 //stencil buffer reference value 
+	//Geometry stuff
 	#macro BLOCK_SIZE 8 //block size
 	#macro BLOCK_SIZE_HALF 4 //block size/2 (because forward slashes are a precious resource)
+	//Vertex buffer stride stuff
+	#macro VERTEX_X_OFFSET 0
+	#macro VERTEX_Y_OFFSET 4
+	#macro VERTEX_Z_OFFSET 8
+	#macro VERTEX_NX_OFFSET 12
+	#macro VERTEX_NY_OFFSET 16
+	#macro VERTEX_NZ_OFFSET 20
+	//Camera stuff
+	#macro X_UP 1 //x-up direction
+	#macro Y_UP 1 //y-up direction
+	#macro Z_UP 1 //z-up direction
 	
 #endregion 
 
@@ -160,42 +173,15 @@ lights = []; //array to hold light structs
 
 #endregion
 
+#region Define Block and Skybox Geometry 
 
-
-modIndex = -1;
-
-
-
-
+//main geometry vertex format (skybox and blocks)
 vertex_format_begin();
 vertex_format_add_position_3d();
 vertex_format_add_normal();
 vertex_format_add_color();
 vertex_format_add_texcoord();
 vertex_format = vertex_format_end();
-
-vertex_format_begin();
-vertex_format_add_position_3d();
-vertex_format_add_normal();
-vertex_format_add_color();
-shadow_vertex_format = vertex_format_end();
-
-
-lightArray = [BLOCK_SIZE*TILES_X/2, BLOCK_SIZE*TILES_Y/2, 2*BLOCK_SIZE];
-
-
-vertexArray = [];
-normalArray = [];
-materialArray = [];
-modelArray = [];
-
-
-//cube.materialArray = materialArray;
-
-movePitch = 0;
-moveDir = 0;
-
-modelMatrix = matrix_build(0, 0, -1, 0, 0, 0, 1, 1, 1);
 
 #region Create Skybox
 
@@ -432,16 +418,17 @@ vertex_end(vbuff_skybox);
 
 #endregion
 
-//Create block manually
+#region Create Block template
+
 block = vertex_create_buffer();
 //origin
 var _x = 0;
 var _y = 0;
 var _z = 0;
 //normal vector positive directions
-var _z_up = 1;
-var _y_up = 1;
-var _x_up = 1;
+var _x_up = X_UP;
+var _y_up = Y_UP;
+var _z_up = Z_UP;
 //uvs
 var _uvs = sprite_get_uvs(spr_stone,0);
 var _ul = _uvs[0];
@@ -504,129 +491,121 @@ vertex_begin(block, vertex_format);
 		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y + BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ur, _vb, _color, 1);
 		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z - BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ul, _vb, _color, 1);
 		vertex_add_point(block, _x - BLOCK_SIZE_HALF, _y - BLOCK_SIZE_HALF, _z + BLOCK_SIZE_HALF,    -_x_up, 0, 0, _ul, _vt, _color, 1);
-
+		
 vertex_end(block);
 
+#endregion
 
+#endregion
 
-hash1 = 0;
-hash2 = 0;
-hash3 = 0;
-structEdgeGraph = 0;
+#region Define Shadow Volume Geometry
 
-info = vertex_format_get_info(vertex_format);
-vertexSize = info[$ "stride"];
+//shadow volume vertex format
+vertex_format_begin();
+vertex_format_add_position_3d();
+vertex_format_add_normal();
+vertex_format_add_color(); //***necessary?
+shadow_vertex_format = vertex_format_end();
 
-//show_debug_message(vertexSize);
+//calculate shadow volume geometry from block geometry
+var _info = vertex_format_get_info(vertex_format);
+var _vertex_size = _info[$ "stride"];
+var _triangle_size = _vertex_size*3;
+var _buffer_shadows_vertex_buffer = buffer_create(720, buffer_grow, 1); //create a grow buffer (instead of guessing size, just allow it to grow)
+var _buffer_vertex_buffer = buffer_create_from_vertex_buffer(block, buffer_fixed, 1); //extract vertex buffer data to a regular buffer to process
+var _buffer_size = buffer_get_size(_buffer_vertex_buffer); //size of vertex buffer
+var _num_triangles = _buffer_size/_triangle_size; //number of triangles in vertex buffer
 
-triangleSize = vertexSize*3;
+var _num_edges = 0; 
+var _hash1 = 0;
+var _hash2 = 0;
+var _hash3 = 0;
+var _struct_edge_graph = 0;
+var _buff_read_pos = 0; //buffer read position
 
-//buffShadows = -1;
-
-//if(buffer_exists(buffShadows))
-//{
-//	buffer_delete(buffShadows);	
-//}
-trianglesAmount = array_length(vertexArray)/3;
-//show_debug_message(trianglesAmount);
-
-buffShadows = buffer_create(720, buffer_grow, 1);
-//show_debug_message(cubeBuffer);
-//show_debug_message(_size);
-model = load_obj("cube.obj", "cube.mtl");
-//cubeBuffer = buffer_create_from_vertex_buffer(model, buffer_fixed, 1);
-cubeBuffer = buffer_create_from_vertex_buffer(block, buffer_fixed, 1);
-
-
-bufferSize = buffer_get_size(cubeBuffer);
-show_debug_message(bufferSize);
-
-var _numTriangles = bufferSize/triangleSize;
-var _num_edges = 0;
-buffReadPos = 0;
-for (var i = 0; i < _numTriangles; i++){
+for (var i = 0; i < _num_triangles; i++)
+{	
+	_buff_read_pos = i*_triangle_size; //advance buffer read position to next triangle
 	
-	buffReadPos = i*36*3;
-	var _pos1 = buffReadPos;
-	var _xA = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
-	var _yA = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
-	var _zA = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
-	var _nxA = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
-	var _nyA = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
-	var _nzA = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
+	var _pos1 = _buff_read_pos; //store buffer read position
+	var _xA = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_X_OFFSET, buffer_f32));
+	var _yA = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Y_OFFSET, buffer_f32));
+	var _zA = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Z_OFFSET, buffer_f32));
+	var _nxA = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NX_OFFSET, buffer_f32);
+	var _nyA = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NY_OFFSET, buffer_f32);
+	var _nzA = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NZ_OFFSET, buffer_f32);
 	
+	//-0's shouldn't be a problem, but they bug me
 	_nxA = _nxA == -0 ? 0 : _nxA;
 	_nyA = _nyA == -0 ? 0 : _nyA;
 	_nzA = _nzA == -0 ? 0 : _nzA;
 	
-	buffReadPos += 36;
-	var _pos2 = buffReadPos;
-	var _xB = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
-	var _yB = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
-	var _zB = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
-	var _nxB = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
-	var _nyB = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
-	var _nzB = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
+	_buff_read_pos += 36;
+	var _pos2 = _buff_read_pos; //store buffer read position
+	var _xB = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_X_OFFSET, buffer_f32));
+	var _yB = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Y_OFFSET, buffer_f32));
+	var _zB = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Z_OFFSET, buffer_f32));
+	var _nxB = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NX_OFFSET, buffer_f32);
+	var _nyB = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NY_OFFSET, buffer_f32);
+	var _nzB = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NZ_OFFSET, buffer_f32);
 	
+	//-0's shouldn't be a problem, but they bug me
 	_nxB = _nxB == -0 ? 0 : _nxB;
 	_nyB = _nyB == -0 ? 0 : _nyB;
 	_nzB = _nzB == -0 ? 0 : _nzB;
 	
-	buffReadPos += 36;
-	var _pos3 = buffReadPos;
-	var _xC = round(buffer_peek(cubeBuffer, buffReadPos, buffer_f32));
-	var _yC = round(buffer_peek(cubeBuffer, buffReadPos+4, buffer_f32));
-	var _zC = round(buffer_peek(cubeBuffer, buffReadPos+8, buffer_f32));
-	var _nxC = buffer_peek(cubeBuffer, buffReadPos+12, buffer_f32);
-	var _nyC = buffer_peek(cubeBuffer, buffReadPos+16, buffer_f32);
-	var _nzC = buffer_peek(cubeBuffer, buffReadPos+20, buffer_f32);
+	_buff_read_pos += 36;
+	var _pos3 = _buff_read_pos;
+	var _xC = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_X_OFFSET, buffer_f32));
+	var _yC = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Y_OFFSET, buffer_f32));
+	var _zC = round(buffer_peek(_buffer_vertex_buffer, _buff_read_pos + VERTEX_Z_OFFSET, buffer_f32));
+	var _nxC = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NX_OFFSET, buffer_f32);
+	var _nyC = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NY_OFFSET, buffer_f32);
+	var _nzC = buffer_peek(_buffer_vertex_buffer,	   _buff_read_pos + VERTEX_NZ_OFFSET, buffer_f32);
 	
+	//-0's shouldn't be a problem, but they bug me
 	_nxC = _nxC == -0 ? 0 : _nxC;
 	_nyC = _nyC == -0 ? 0 : _nyC;
 	_nzC = _nzC == -0 ? 0 : _nzC;
 	
 		////write triangle into shadow volume buffer
 		//Triangle 1
-		buffer_write(buffShadows,buffer_f32,_xA);
-		buffer_write(buffShadows,buffer_f32,_yA);
-		buffer_write(buffShadows,buffer_f32,_zA);
-		buffer_write(buffShadows,buffer_f32,_nxA);
-		buffer_write(buffShadows,buffer_f32,_nyA);
-		buffer_write(buffShadows,buffer_f32,_nzA);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_xA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_yA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_zA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzA);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		
-		buffer_write(buffShadows,buffer_f32,_xC);
-		buffer_write(buffShadows,buffer_f32,_yC);
-		buffer_write(buffShadows,buffer_f32,_zC);
-		buffer_write(buffShadows,buffer_f32,_nxC);
-		buffer_write(buffShadows,buffer_f32,_nyC);
-		buffer_write(buffShadows,buffer_f32,_nzC);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_xC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_yC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_zC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzC);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		
-		buffer_write(buffShadows,buffer_f32,_xB);
-		buffer_write(buffShadows,buffer_f32,_yB);
-		buffer_write(buffShadows,buffer_f32,_zB);
-		buffer_write(buffShadows,buffer_f32,_nxB);
-		buffer_write(buffShadows,buffer_f32,_nyB);
-		buffer_write(buffShadows,buffer_f32,_nzB);
-		buffer_write(buffShadows,buffer_u8,255); //extrudable cap condition
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
-		buffer_write(buffShadows,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_xB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_yB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_zB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzB);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+		buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		
-		
-		
-		
-	
-	var _hash1 = string_join(",",string(min(_xA,_xB)),string(max(_xA,_xB)),string(min(_yA,_yB)),string(max(_yA,_yB)),string(min(_zA,_zB)),string(max(_zA,_zB)));
-	var _hash2 = string_join(",",string(min(_xB,_xC)),string(max(_xB,_xC)),string(min(_yB,_yC)),string(max(_yB,_yC)),string(min(_zB,_zC)),string(max(_zB,_zC)));
-	var _hash3 = string_join(",",string(min(_xC,_xA)),string(max(_xC,_xA)),string(min(_yC,_yA)),string(max(_yC,_yA)),string(min(_zC,_zA)),string(max(_zC,_zA)));
+	var __hash1 = string_join(",",string(min(_xA,_xB)),string(max(_xA,_xB)),string(min(_yA,_yB)),string(max(_yA,_yB)),string(min(_zA,_zB)),string(max(_zA,_zB)));
+	var __hash2 = string_join(",",string(min(_xB,_xC)),string(max(_xB,_xC)),string(min(_yB,_yC)),string(max(_yB,_yC)),string(min(_zB,_zC)),string(max(_zB,_zC)));
+	var __hash3 = string_join(",",string(min(_xC,_xA)),string(max(_xC,_xA)),string(min(_yC,_yA)),string(max(_yC,_yA)),string(min(_zC,_zA)),string(max(_zC,_zA)));
 			
 	var buffPos1 = [_pos1, _pos2, _pos3];
 	var buffPos2 = [_pos2, _pos3, _pos1];
@@ -642,7 +621,7 @@ for (var i = 0; i < _numTriangles; i++){
 	var _zV2 = [_zB, _zC, _zA];
 	var _zV3 = [_zC, _zA, _zB];
 	
-	var _hashes = [_hash1, _hash2, _hash3];
+	var _hashes = [__hash1, __hash2, __hash3];
 	
 	var _nx, _ny, _nz;
 	var _x1A, _x2A, _y1A, _y2A, _z1A, _z2A, _normXA, _normYA, _normZA, _normXB, _normYB, _normZB;
@@ -655,38 +634,38 @@ for (var i = 0; i < _numTriangles; i++){
 		{
 			var _hash = _hashes[j];
 
-			arrayEdgeNode = structEdgeGraph[$ _hash];
+			arrayEdgeNode = _struct_edge_graph[$ _hash];
 				if (is_undefined(arrayEdgeNode)){
 					arrayEdgeNode = array_create(6, -1);
 					arrayEdgeNode[0] = buffPos1[j];
 					arrayEdgeNode[1] = buffPos2[j];
 					arrayEdgeNode[2] = buffPos3[j];
-					structEdgeGraph[$ _hash] = arrayEdgeNode;
+					_struct_edge_graph[$ _hash] = arrayEdgeNode;
 				}
 				else
 				{
 					//if (arrayEdgeNode[3] != -1){
-					//	variable_struct_remove(structEdgeGraph, _hash);	
+					//	variable_struct_remove(_struct_edge_graph, _hash);	
 					//}
 					//else
 					{
 						
-						_nx = buffer_peek(cubeBuffer, arrayEdgeNode[0]+12, buffer_f32);
-						_ny = buffer_peek(cubeBuffer, arrayEdgeNode[0]+16, buffer_f32);
-						_nz = buffer_peek(cubeBuffer, arrayEdgeNode[0]+20, buffer_f32);
+						_nx = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+12, buffer_f32);
+						_ny = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+16, buffer_f32);
+						_nz = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+20, buffer_f32);
 						
 						var _nAdotV13 = dot_product_3d_normalized(_nx,_ny,_nz,(_xV3[j] - _xV1[j]),(_yV3[j] - _yV1[j]),(_zV3[j] - _zV1[j]));
 						
-						//_normXA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+12, buffer_f32);
-						//_normYA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+16, buffer_f32);
-						//_normZA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+20, buffer_f32);
+						//_normXA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+12, buffer_f32);
+						//_normYA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+16, buffer_f32);
+						//_normZA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+20, buffer_f32);
 						
 						//if(_nx == (_xV3[j] - _xV1[j]) and _ny == (_yV3[j] - _yV1[j]) and _nz == (_zV3[j] - _zV1[j]))
 						//if(_nx == _normXA and _ny == _normYA and _nz == _normZA)
 						if(_nAdotV13 >= 0.0) //remove coplanar edges
 						{
 							arrayEdgeNode = -1;
-							variable_struct_remove(structEdgeGraph, _hash);
+							variable_struct_remove(_struct_edge_graph, _hash);
 						}
 						else
 						{
@@ -695,23 +674,23 @@ for (var i = 0; i < _numTriangles; i++){
 							arrayEdgeNode[3] = buffPos1[j];
 							arrayEdgeNode[4] = buffPos2[j];
 							arrayEdgeNode[5] = buffPos3[j];
-							variable_struct_remove(structEdgeGraph, _hash);
+							variable_struct_remove(_struct_edge_graph, _hash);
 							
-							_x1A = buffer_peek(cubeBuffer, arrayEdgeNode[0]+0, buffer_f32);
-							_y1A = buffer_peek(cubeBuffer, arrayEdgeNode[0]+4, buffer_f32);
-							_z1A = buffer_peek(cubeBuffer, arrayEdgeNode[0]+8, buffer_f32);
+							_x1A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+0, buffer_f32);
+							_y1A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+4, buffer_f32);
+							_z1A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[0]+8, buffer_f32);
 							
-							_normXA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+12, buffer_f32);
-							_normYA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+16, buffer_f32);
-							_normZA = buffer_peek(cubeBuffer, arrayEdgeNode[2]+20, buffer_f32);
+							_normXA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+12, buffer_f32);
+							_normYA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+16, buffer_f32);
+							_normZA = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[2]+20, buffer_f32);
 							
-							_x2A = buffer_peek(cubeBuffer, arrayEdgeNode[1]+0, buffer_f32);
-							_y2A = buffer_peek(cubeBuffer, arrayEdgeNode[1]+4, buffer_f32);
-							_z2A = buffer_peek(cubeBuffer, arrayEdgeNode[1]+8, buffer_f32);
+							_x2A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[1]+0, buffer_f32);
+							_y2A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[1]+4, buffer_f32);
+							_z2A = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[1]+8, buffer_f32);
 							
-							_normXB = buffer_peek(cubeBuffer, arrayEdgeNode[3]+12, buffer_f32);
-							_normYB = buffer_peek(cubeBuffer, arrayEdgeNode[3]+16, buffer_f32);
-							_normZB = buffer_peek(cubeBuffer, arrayEdgeNode[3]+20, buffer_f32);
+							_normXB = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[3]+12, buffer_f32);
+							_normYB = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[3]+16, buffer_f32);
+							_normZB = buffer_peek(_buffer_vertex_buffer, arrayEdgeNode[3]+20, buffer_f32);
 							
 							//nx_col1 = (_normXA*0.5+0.5)*255.0
 							//ny_col1 = (_normYA*0.5+0.5)*255.0
@@ -732,279 +711,279 @@ for (var i = 0; i < _numTriangles; i++){
 							arrayEdgeNode = -1;
 							
 								//Triangle 1
-								buffer_write(buffShadows,buffer_f32,_x1A);
-								buffer_write(buffShadows,buffer_f32,_y1A);
-								buffer_write(buffShadows,buffer_f32,_z1A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
-								buffer_write(buffShadows,buffer_u32,0); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 
-								buffer_write(buffShadows,buffer_f32,_x2A); 
-								buffer_write(buffShadows,buffer_f32,_y2A);
-								buffer_write(buffShadows,buffer_f32,_z2A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
-								buffer_write(buffShadows,buffer_u32,0); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
             
-								buffer_write(buffShadows,buffer_f32,_x2A);
-								buffer_write(buffShadows,buffer_f32,_y2A); 
-								buffer_write(buffShadows,buffer_f32,_z2A);
-								buffer_write(buffShadows,buffer_f32,_normXB);
-								buffer_write(buffShadows,buffer_f32,_normYB);
-								buffer_write(buffShadows,buffer_f32,_normZB);
-								buffer_write(buffShadows,buffer_u32,0); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 								//Triangle 2
-								buffer_write(buffShadows,buffer_f32,_x2A);
-								buffer_write(buffShadows,buffer_f32,_y2A); 
-								buffer_write(buffShadows,buffer_f32,_z2A);
-								buffer_write(buffShadows,buffer_f32,_normXB);
-								buffer_write(buffShadows,buffer_f32,_normYB);
-								buffer_write(buffShadows,buffer_f32,_normZB);
-								buffer_write(buffShadows,buffer_u32,0); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
-								buffer_write(buffShadows,buffer_f32,_x1A);
-								buffer_write(buffShadows,buffer_f32,_y1A);
-								buffer_write(buffShadows,buffer_f32,_z1A);
-								buffer_write(buffShadows,buffer_f32,_normXB);
-								buffer_write(buffShadows,buffer_f32,_normYB);
-								buffer_write(buffShadows,buffer_f32,_normZB);
-								buffer_write(buffShadows,buffer_u32,0); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
-								buffer_write(buffShadows,buffer_f32,_x1A);
-								buffer_write(buffShadows,buffer_f32,_y1A); 
-								buffer_write(buffShadows,buffer_f32,_z1A);
-								buffer_write(buffShadows,buffer_f32,_normXA);
-								buffer_write(buffShadows,buffer_f32,_normYA);
-								buffer_write(buffShadows,buffer_f32,_normZA);
-								buffer_write(buffShadows,buffer_u32,0); 
-								
-								////Triangle 1
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
-
-								//buffer_write(buffShadows,buffer_f32,_x2A); 
-								//buffer_write(buffShadows,buffer_f32,_y2A);
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition B
-            
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
-								
-								////Triangle 2
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
-								
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition B
-								
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition B
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A); 
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
+								buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 								////Triangle 1
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 
-								//buffer_write(buffShadows,buffer_f32,_x2A); 
-								//buffer_write(buffShadows,buffer_f32,_y2A);
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition B
             
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
 								////Triangle 2
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition B
 								
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition B
+								
+								////Triangle 1
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+            
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								
+								////Triangle 2
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
 								
 								
 								
 								////Triangle 1
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 
-								//buffer_write(buffShadows,buffer_f32,_x2A); 
-								//buffer_write(buffShadows,buffer_f32,_y2A);
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
             
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
 								////Triangle 2
-								//buffer_write(buffShadows,buffer_f32,_x2A);
-								//buffer_write(buffShadows,buffer_f32,_y2A); 
-								//buffer_write(buffShadows,buffer_f32,_z2A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z2A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,0); //extrudable for condition A
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0); //extrudable for condition A
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
-								//buffer_write(buffShadows,buffer_f32,_x1A);
-								//buffer_write(buffShadows,buffer_f32,_y1A);
-								//buffer_write(buffShadows,buffer_f32,_z1A);
-								//buffer_write(buffShadows,buffer_u8,nx_col2);
-								//buffer_write(buffShadows,buffer_u8,ny_col2);
-								//buffer_write(buffShadows,buffer_u8,nz_col2);
-								//buffer_write(buffShadows,buffer_u8,255);
-								//buffer_write(buffShadows,buffer_u8,nx_col1);
-								//buffer_write(buffShadows,buffer_u8,ny_col1);
-								//buffer_write(buffShadows,buffer_u8,nz_col1);
-								//buffer_write(buffShadows,buffer_u8,0);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_z1A);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col2);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nx_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,ny_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,nz_col1);
+								//buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 								
 						}
 					}
@@ -1012,12 +991,12 @@ for (var i = 0; i < _numTriangles; i++){
 			}
 		}
 		
-sizeBuff = buffer_tell(buffShadows);
+sizeBuff = buffer_tell(_buffer_shadows_vertex_buffer);
 show_debug_message(sizeBuff);
 show_debug_message($"num silhouette edges: {_num_edges}");
 
 shadowSurface = 0;
-shadowVBuffer = vertex_create_buffer_from_buffer(buffShadows, shadow_vertex_format);
+shadowVBuffer = vertex_create_buffer_from_buffer(_buffer_shadows_vertex_buffer, shadow_vertex_format);
 
 shadowSurface2 = 0;
 
@@ -1042,6 +1021,7 @@ render_ambient_pass = function()
 	
 		//Render geometry to depth buffer for shadow volumes to depth-test
 		with (objCube){drawSelf();}
+		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	
 	draw_light_define_ambient(c_black);	//set ambient to black (no ambient) for future passes involving lighting
@@ -1081,26 +1061,22 @@ render_shadow_volumes = function(_light)
 			//{
 				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
-				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
-				//shader_set_uniform_f_array(_uniform, lightArray);
 				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
-				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
+				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]); //***unnecessary
 			
 					//render front-facing shadow volume polygons
 					gpu_set_cullmode(cull_counterclockwise);
 					gpu_set_stencil_pass(stencilop_incr); //increment
-					//gpu_set_colorwriteenable(true,false,false,true);
 					with(objCube){drawSelfShadow();}
 		
 					//render rear-facing shadow volume polygons
 					gpu_set_cullmode(cull_clockwise);
 					gpu_set_stencil_pass(stencilop_decr); //decrement
-					//gpu_set_colorwriteenable(false,false,true,true);
 					with(objCube){drawSelfShadow();}
+					matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			//}
 			shader_reset();
 			gpu_set_stencil_pass(stencilop_keep); //reset to default (keep)
-			//gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
 			break;
 		}
 	
@@ -1108,12 +1084,8 @@ render_shadow_volumes = function(_light)
 		case shadow_volumes_render_techniques.depth_fail:
 		{
 			shader_set(sh_render_shadow_volumes);
-			//for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-			//{
 				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
-				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
-				//shader_set_uniform_f_array(_uniform, lightArray);
 				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
 				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
@@ -1126,7 +1098,8 @@ render_shadow_volumes = function(_light)
 					gpu_set_cullmode(cull_counterclockwise);
 					gpu_set_stencil_depth_fail(stencilop_decr); //decrement
 					with(objCube){drawSelfShadow();}
-			//}
+					matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
+
 			shader_reset();
 			gpu_set_stencil_depth_fail(stencilop_keep); //reset to default (keep)
 			break;
@@ -1155,6 +1128,7 @@ render_lighting_pass = function(_light)
 		gpu_set_stencil_func(cmpfunc_equal);
 		gpu_set_blendmode(bm_add); //set additive blend mode
 		with (objCube){drawSelf();}
+		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		//gpu_set_blendmode(bm_normal);
 	
@@ -1165,6 +1139,7 @@ render_lighting_pass = function(_light)
 		//shader_set(shd_render_shaded);
 		gpu_set_blendmode(bm_subtract);
 		with (objCube){drawSelf();}
+		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		gpu_set_blendmode(bm_normal);
 		//shader_reset();

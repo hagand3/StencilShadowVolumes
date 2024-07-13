@@ -30,6 +30,7 @@ switch(debug_render)
 		shader_set(shd_test);
 		gpu_set_cullmode(cull_counterclockwise);
 		with (objCube){drawSelf();}
+		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		shader_reset();
 		break;
@@ -47,6 +48,7 @@ switch(debug_render)
 		//render scene
 		gpu_set_cullmode(cull_counterclockwise);
 		with (objCube){drawSelf();}
+		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 		
 		//render shadow volumes
@@ -59,6 +61,7 @@ switch(debug_render)
 				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
 				gpu_set_cullmode(cull_noculling);
 				with(objCube){drawSelfShadow();}
+				matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			shader_reset();
 			gpu_set_cullmode(cull_counterclockwise);
 		}
