@@ -1,3 +1,7 @@
+//freeze vertex buffers
+vertex_freeze(vbuff_skybox);
+vertex_freeze(block);
+
 //Create blocks
 repeat(NUM_BLOCKS)
 {
@@ -7,6 +11,7 @@ repeat(NUM_BLOCKS)
 	_cube.z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
 }
 
+//Show debug overlay if enabled
 if(DEBUG_OVERLAY)
 {
 	call_later(20,time_source_units_frames,function()
@@ -15,7 +20,7 @@ if(DEBUG_OVERLAY)
 	});
 }
 
-//Create lights
+//Create lights at random positions and with random colors
 lights = []; //clear lights array
 var _ii = 0;
 repeat(NUM_LIGHTS)
