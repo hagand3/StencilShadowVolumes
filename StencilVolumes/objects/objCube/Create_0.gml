@@ -2,7 +2,7 @@
 z = 0; //z position
 
 //speed and direction
-spd = 0.4; //0.2
+spd = 0.2; //0.2
 spd_x = random_range(-1,1);
 spd_y = random_range(-1,1);
 dir = point_direction(0,0,spd_x,spd_y);
@@ -20,8 +20,8 @@ rotation_y_phase = random(360);
 rotation_z_phase = random(360);
 
 //rotation speeds
-rotation_x_spd = random_range(-4.0,4.0);
-rotation_y_spd = random_range(-4.0,4.0);
+rotation_x_spd = random_range(-2.0,2.0);
+rotation_y_spd = random_range(-2.0,2.0);
 
 //scale
 scale = 1; //model scale 

@@ -26,12 +26,15 @@ global.time = 0;
 
 //Macros (change these as you see fit)
 	#macro NUM_BLOCKS 100
-	#macro NUM_LIGHTS 1
+	#macro NUM_LIGHTS 7 //max 7
 	#macro BLOCK_MIN_Z 30 //min z spawn position for blocks
 	#macro BLOCK_MAX_Z 80 //max z spawn position for blocks
-	#macro TILES_X 50 //Area x dimension
-	#macro TILES_Y 50 //Area y dimension
-	#macro TILES_Z 50 //Area z dimension
+	#macro TILES_X 40 //Area x dimension
+	#macro TILES_Y 40 //Area y dimension
+	#macro TILES_Z 40 //Area z dimension
+	//Lights
+	#macro AMBIENT_COL_DEFAULT make_color_rgb(100,100,100)
+	#macro LIGHT_RADIUS_DEFAULT 100 
 	//display
 	#macro DISPLAY_SCALE 1 //set to lower value if smaller screen is desired
 	#macro FULLSCREEN false //set full-screen: true/false
@@ -39,6 +42,7 @@ global.time = 0;
 	#macro VSYNC true //set VSYNC: true/false
 	//camera
 	#macro CAM_POV_Z_OFFSET 16 //vertical offset for POV camera
+	#macro LOOK_SENSITIVITY 0.01 //lower values, smoother look sensitivity
 	//debug
 	#macro DEBUG_OVERLAY true //show debug overlay
 
@@ -99,6 +103,7 @@ enum camera_types
 camera_type = camera_types.orbit; //default Orbit
 camera = -1;
 look_enabled = true;
+look_sensitivity = LOOK_SENSITIVITY;
 cam_x = 0;
 cam_y = 0;
 cam_z = 0;
@@ -111,10 +116,12 @@ phase_target = 0;
 rad = 100;
 rad_target = 100;
 look_dir = 0;
+look_dir_target = 0;
 look_pitch = 0;
+look_pitch_target = 0;
 
-//Lights
-ambient_col = c_teal; //ambient color
+#region Lights
+ambient_col = AMBIENT_COL_DEFAULT; //ambient color
 
 function light(_x,_y,_z,_radius,_color) constructor
 {
@@ -135,18 +142,13 @@ function light(_x,_y,_z,_radius,_color) constructor
 	//update method (run each step event)
 	update = function(){}
 	
+	//index
+	idx = 0;
 }
 
-//initialize lights
-light_pos = [];
-for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-{
-	var _x = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
-	var _y = random_range(-BLOCK_SIZE*12,BLOCK_SIZE*12);
-	var _z = random_range(BLOCK_MAX_Z+BLOCK_SIZE, BLOCK_MAX_Z+5*BLOCK_SIZE); //lights above all blocks
-	light_pos[_ii] = [_x,_y,_z];
-}
+lights = [];
 
+#endregion
 
 cameraMat = 0;
 cameraProjMat = 0;
@@ -191,13 +193,13 @@ moveDir = 0;
 
 modelMatrix = matrix_build(0, 0, -1, 0, 0, 0, 1, 1, 1);
 
+#region Create Skybox
 
 var _x = 0;
 var _y = 0;
 var _z = 0;
 var _color = c_white; //default color
 
-// Create Box
 vbuff_skybox = vertex_create_buffer();
 vertex_begin(vbuff_skybox, vertex_format);
 
@@ -209,18 +211,12 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 	for(var _jj = 0; _jj < TILES_Y; _jj++)
 	{
 		_y = _jj*BLOCK_SIZE;
-		switch(irandom(1))
+		if(random(1) > 0.3)
 		{
-			case 0: 
-			{
-				var _uvs = sprite_get_uvs(spr_grass,0);
-				break;
-			}
-			case 1: 
-			{
-				var _uvs = sprite_get_uvs(spr_dirt,0);
-				break;
-			}
+			var _uvs = sprite_get_uvs(spr_grass,0);	
+		}	else
+		{
+			var _uvs = sprite_get_uvs(spr_dirt,0)
 		}
 		
 		var _ul = _uvs[0];
@@ -251,7 +247,7 @@ for(var _ii = 0; _ii < TILES_X; _ii++)
 		{
 			case 0: 
 			{
-				var _uvs = sprite_get_uvs(spr_grass,0);
+				var _uvs = sprite_get_uvs(spr_stone,0);
 				break;
 			}
 			case 1: 
@@ -429,6 +425,8 @@ for(var _jj = 0; _jj < TILES_Y; _jj++)
 	}
 }
 vertex_end(vbuff_skybox);
+
+#endregion
 
 //Create block manually
 block = vertex_create_buffer();
@@ -1048,8 +1046,8 @@ render_ambient_pass = function()
 	
 }
 
-//Render Shadow Volumes to surface
-render_shadow_volumes = function()
+//Render Shadow Volumes to surface (pass in light source)
+render_shadow_volumes = function(_light)
 {
 	//Shadow Volume Rendering
 	gpu_set_zwriteenable(false); //disable depth writing but keep depth testing enabled
@@ -1075,13 +1073,13 @@ render_shadow_volumes = function()
 		{
 			shader_set(sh_render_shadow_volumes);
 			//gpu_set_zfunc(cmpfunc_less); //default depth testing
-			for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-			{
+			//for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
+			//{
 				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 				//shader_set_uniform_f_array(_uniform, lightArray);
-				shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
+				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
 				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 					//render front-facing shadow volume polygons
@@ -1095,7 +1093,7 @@ render_shadow_volumes = function()
 					gpu_set_stencil_pass(stencilop_decr); //decrement
 					//gpu_set_colorwriteenable(false,false,true,true);
 					with(objCube){drawSelfShadow();}
-			}
+			//}
 			shader_reset();
 			gpu_set_stencil_pass(stencilop_keep); //reset to default (keep)
 			//gpu_set_zfunc(cmpfunc_lessequal); //default depth testing
@@ -1106,13 +1104,13 @@ render_shadow_volumes = function()
 		case shadow_volumes_render_techniques.depth_fail:
 		{
 			shader_set(sh_render_shadow_volumes);
-			for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
-			{
+			//for(var _ii = 0; _ii < NUM_LIGHTS; _ii++)
+			//{
 				var _uniform = shader_get_uniform(sh_render_shadow_volumes, "LightPos");
 				var _eye = shader_get_uniform(sh_render_shadow_volumes, "Eye");
 				//shader_set_uniform_f_array(_uniform, light_pos[_ii]);
 				//shader_set_uniform_f_array(_uniform, lightArray);
-				shader_set_uniform_f_array(_uniform, [lightArray[0],lightArray[1],lightArray[2]]);
+				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
 				shader_set_uniform_f_array(_eye,[xfrom,yfrom,zfrom]);
 			
 					//render front-facing shadow volume polygons
@@ -1124,12 +1122,54 @@ render_shadow_volumes = function()
 					gpu_set_cullmode(cull_counterclockwise);
 					gpu_set_stencil_depth_fail(stencilop_decr); //decrement
 					with(objCube){drawSelfShadow();}
-			}
+			//}
 			shader_reset();
 			gpu_set_stencil_depth_fail(stencilop_keep); //reset to default (keep)
 			break;
 		}
 	}
+}
+
+//render lighting pass (pass in light source)
+render_lighting_pass = function(_light)
+{
+	//Re-apply regular camera settings
+	camera_set_proj_mat(camera, cameraProjMat);
+	camera_apply(camera);
+
+	gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
+	//gpu_set_zwriteenable(true); //enable depth writing
+	gpu_set_ztestenable(true); //enable depth testing
+	gpu_set_cullmode(cull_counterclockwise); //set cull mode to counterclockwise (back-faces)
+	gpu_set_stencil_ref(STENCIL_REF_VAL);
+	
+		draw_set_lighting(true); //reactivate lighting (ambient term should still be set to c_black, meaning no additional ambient light is rendered)
+		draw_light_define_point(_light.idx, _light.x,_light.y,_light.z, _light.radius, _light.color); //define point source from light struct
+		draw_light_enable(_light.idx, true); //enable light source
+	
+		//Render unshaded geometry
+		gpu_set_stencil_func(cmpfunc_equal);
+		gpu_set_blendmode(bm_add); //set additive blend mode
+		with (objCube){drawSelf();}
+		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		//gpu_set_blendmode(bm_normal);
+	
+		
+	
+		//Render shaded geometry
+		gpu_set_stencil_func(cmpfunc_notequal);
+		//shader_set(shd_render_shaded);
+		gpu_set_blendmode(bm_subtract);
+		with (objCube){drawSelf();}
+		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
+		gpu_set_blendmode(bm_normal);
+		//shader_reset();
+		
+		draw_light_enable(_light.idx,false); //disable point source
+		draw_set_lighting(false); //disable lighting 
+
+	//reset for drawing main surface
+	gpu_set_stencil_enable(false); //disable stencil test	
 }
 
 #endregion

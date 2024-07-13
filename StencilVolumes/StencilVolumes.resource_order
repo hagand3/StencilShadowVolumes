@@ -6,7 +6,11 @@
     {"name":"shd_visualize_shadow_volumes","order":5,"path":"shaders/shd_visualize_shadow_volumes/shd_visualize_shadow_volumes.yy",},
     {"name":"spr_block_textures","order":1,"path":"sprites/spr_block_textures/spr_block_textures.yy",},
     {"name":"spr_dirt","order":3,"path":"sprites/spr_dirt/spr_dirt.yy",},
+    {"name":"spr_emerald","order":8,"path":"sprites/spr_emerald/spr_emerald.yy",},
+    {"name":"spr_gold","order":6,"path":"sprites/spr_gold/spr_gold.yy",},
     {"name":"spr_grass","order":2,"path":"sprites/spr_grass/spr_grass.yy",},
+    {"name":"spr_ruby","order":7,"path":"sprites/spr_ruby/spr_ruby.yy",},
+    {"name":"spr_sand","order":5,"path":"sprites/spr_sand/spr_sand.yy",},
     {"name":"spr_stone","order":4,"path":"sprites/spr_stone/spr_stone.yy",},
   ],
 }

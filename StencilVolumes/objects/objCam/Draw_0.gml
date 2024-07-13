@@ -10,50 +10,16 @@ camera_apply(camera);
 render_ambient_pass(); //render geometry with ambient light only
 
 //For each light source:
-render_shadow_volumes(); //render shadow volumes to stencil buffer
+for(var _ii = 0, _light; _ii < NUM_LIGHTS; _ii++)
+{
+	_light = lights[_ii];
+
+	render_shadow_volumes(_light); //render shadow volumes to stencil buffer
+
+	render_lighting_pass(_light); //render shading and lighting according to stencil buffer
+}
 
 
-
-
-
-	
-
-
-//Re-apply regular camera settings
-camera_set_proj_mat(camera, cameraProjMat);
-camera_apply(camera);
-
-gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
-//gpu_set_zwriteenable(true); //enable depth writing
-gpu_set_ztestenable(true); //enable depth testing
-gpu_set_cullmode(cull_counterclockwise); //set cull mode to counterclockwise (back-faces)
-gpu_set_stencil_ref(STENCIL_REF_VAL);
-	
-	draw_set_lighting(true); //reactivate lighting (ambient term should still be set to c_black, meaning no additional ambient light is rendered)
-	draw_light_define_point(0, lightArray[0], lightArray[1], lightArray[2], 100, c_red); //define point source from light struct
-	draw_light_enable(0, true); //enable light source
-	
-	//Render unshaded geometry
-	gpu_set_stencil_func(cmpfunc_equal);
-	gpu_set_blendmode(bm_add); //set additive blend mode
-	with (objCube){drawSelf();}
-	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	gpu_set_blendmode(bm_normal);
-	
-	draw_light_enable(0,false); //disable point source
-	draw_set_lighting(false); //disable lighting
-	
-	//Render shaded geometry
-	gpu_set_stencil_func(cmpfunc_notequal);
-	//shader_set(shd_render_shaded);
-	gpu_set_blendmode(bm_subtract);
-	with (objCube){drawSelf();}
-	vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-	gpu_set_blendmode(bm_normal);
-	//shader_reset();
-
-//reset for drawing main surface
-gpu_set_stencil_enable(false); //disable stencil test
 
 switch(debug_render)
 {

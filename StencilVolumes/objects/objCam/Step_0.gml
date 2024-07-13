@@ -7,6 +7,8 @@ global.time += 0.25;
 rad = rad != rad_target ? lerp(rad,rad_target,0.05) : rad;
 zfrom = zfrom != zfrom_target ? lerp(zfrom,zfrom_target,0.05) : zfrom;	
 phase = phase != phase_target ? lerp(phase,phase_target,0.05) : phase;	
+look_dir = look_dir != look_dir_target ? lerp(look_dir,look_dir_target,LOOK_SENSITIVITY) : look_dir;
+look_pitch = look_pitch != look_pitch_target ? lerp(look_pitch,look_pitch_target,LOOK_SENSITIVITY) : look_pitch;
 
 switch(camera_type)
 {
@@ -67,9 +69,9 @@ switch(camera_type)
 		if(look_enabled)
 		{
 			//Mouse Look
-			look_dir -= (window_mouse_get_x() - window_get_width() / 2) / 20;
-		    look_pitch -= (window_mouse_get_y() - window_get_height() / 2) / 20;
-		    look_pitch = clamp(look_pitch, -85, 85);
+			look_dir_target -= (window_mouse_get_x() - window_get_width() / 2) / 20;
+		    look_pitch_target -= (window_mouse_get_y() - window_get_height() / 2) / 20;
+		    look_pitch_target = clamp(look_pitch_target, -85, 85);
 			window_mouse_set(window_get_width() / 2, window_get_height() / 2);
 		}
 		

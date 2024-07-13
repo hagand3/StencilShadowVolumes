@@ -29,9 +29,9 @@ switch(camera_type)
 		cam_y = 0.2*TILES_X*BLOCK_SIZE;
 		
 		look_dir = 135;
+		look_dir_target = 135;
 		look_pitch = 0;
-		rad = 100;
-		rad_target = 100;
+		look_pitch_target = 0;
 		cam_z = 0;
 	
 		break;

@@ -14,3 +14,13 @@ if(DEBUG_OVERLAY)
 		show_debug_overlay(true,false,1);
 	});
 }
+
+//Create lights
+lights = []; //clear lights array
+var _ii = 0;
+repeat(NUM_LIGHTS)
+{
+	lights[_ii] = new light(random(TILES_X*BLOCK_SIZE),random(TILES_Y*BLOCK_SIZE),random(TILES_Z*BLOCK_SIZE/2), LIGHT_RADIUS_DEFAULT, make_color_hsv(_ii*(255/NUM_LIGHTS),255,255));
+	lights[_ii].idx = _ii; //store index
+	_ii++;
+}
