@@ -26,12 +26,7 @@
     {"$GMFolder":"","%Name":"Tile Sets","folderPath":"folders/Tile Sets.yy","name":"Tile Sets","resourceType":"GMFolder","resourceVersion":"2.0",},
     {"$GMFolder":"","%Name":"Timelines","folderPath":"folders/Timelines.yy","name":"Timelines","resourceType":"GMFolder","resourceVersion":"2.0",},
   ],
-  "IncludedFiles":[
-    {"$GMIncludedFile":"","%Name":"cube.mtl","CopyToMask":-1,"filePath":"datafiles","name":"cube.mtl","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"cube.obj","CopyToMask":-1,"filePath":"datafiles","name":"cube.obj","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"MAP01.mtl","CopyToMask":-1,"filePath":"datafiles","name":"MAP01.mtl","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-    {"$GMIncludedFile":"","%Name":"MAP01.obj","CopyToMask":-1,"filePath":"datafiles","name":"MAP01.obj","resourceType":"GMIncludedFile","resourceVersion":"2.0",},
-  ],
+  "IncludedFiles":[],
   "isEcma":false,
   "LibraryEmitters":[],
   "MetaData":{
