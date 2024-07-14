@@ -11,12 +11,12 @@ Light and Dark caps are shadow volume geometry which face towards and away from 
 
 **Resources**
 The process of rendering shadow volumes is an involved topic with lots of good articles floating around. Here's a non-exhaustive list of links for some ones I found helpful:
-https://cglearn.eu/pub/computer-graphics/shadows
-https://en.wikipedia.org/wiki/Shadow_volume
-https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-9-efficient-shadow-volume-rendering
-https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-11-efficient-and-robust-shadow-volumes-using
-https://ogldev.org/www/tutorial40/tutorial40.html
-https://www.gamedev.net/reference/articles/article1873.asp 
-https://aras-p.info/texts/revext.html
-https://www.jankautz.com/courses/ShadowCourse/08-SoftShadowVolumes.pdf
-https://fileadmin.cs.lth.se/graphics/research/shadows/ulf_thesis_lores.pdf
+- https://cglearn.eu/pub/computer-graphics/shadows
+- https://en.wikipedia.org/wiki/Shadow_volume
+- https://developer.nvidia.com/gpugems/gpugems/part-ii-lighting-and-shadows/chapter-9-efficient-shadow-volume-rendering
+- https://developer.nvidia.com/gpugems/gpugems3/part-ii-light-and-shadows/chapter-11-efficient-and-robust-shadow-volumes-using
+- https://ogldev.org/www/tutorial40/tutorial40.html
+- https://www.gamedev.net/reference/articles/article1873.asp 
+- https://aras-p.info/texts/revext.html
+- https://www.jankautz.com/courses/ShadowCourse/08-SoftShadowVolumes.pdf
+- https://fileadmin.cs.lth.se/graphics/research/shadows/ulf_thesis_lores.pdf
