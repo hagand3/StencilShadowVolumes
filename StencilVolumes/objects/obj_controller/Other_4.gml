@@ -1,14 +1,17 @@
 //freeze vertex buffers
 vertex_freeze(vbuff_skybox);
 vertex_freeze(block);
+vertex_freeze(zpass_shadow_volume_vertex_buffer);
+vertex_freeze(zfail_shadow_volume_vertex_buffer);
+
 
 //Create blocks
 repeat(NUM_BLOCKS)
 {
-	var _cube = instance_create_depth(random(BLOCK_SIZE*TILES_X), random(BLOCK_SIZE*TILES_Y), 0, objCube);
-	_cube.model = block;
-	_cube.shadow_vbuff = shadowVBuffer;
-	_cube.z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
+	var _block = instance_create_depth(random(BLOCK_SIZE*TILES_X), random(BLOCK_SIZE*TILES_Y), 0, obj_block);
+	_block.model = block;
+	_block.shadow_vbuff = zfail_shadow_volume_vertex_buffer; //default zfail
+	_block.z = random_range(BLOCK_MIN_Z,BLOCK_MAX_Z);
 }
 
 //Show debug overlay if enabled

@@ -1,8 +1,9 @@
 {
   "FolderOrderSettings":[],
   "ResourceOrderSettings":[
+    {"name":"shadow_volume_functions","order":1,"path":"scripts/shadow_volume_functions/shadow_volume_functions.yy",},
     {"name":"sh_render_shadow_volumes","order":2,"path":"shaders/sh_render_shadow_volumes/sh_render_shadow_volumes.yy",},
-    {"name":"shd_test","order":3,"path":"shaders/shd_test/shd_test.yy",},
+    {"name":"shd_visualize_normals","order":3,"path":"shaders/shd_visualize_normals/shd_visualize_normals.yy",},
     {"name":"shd_visualize_shadow_volumes","order":5,"path":"shaders/shd_visualize_shadow_volumes/shd_visualize_shadow_volumes.yy",},
     {"name":"spr_block_textures","order":1,"path":"sprites/spr_block_textures/spr_block_textures.yy",},
     {"name":"spr_dirt","order":3,"path":"sprites/spr_dirt/spr_dirt.yy",},

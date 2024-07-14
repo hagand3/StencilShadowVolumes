@@ -1,13 +1,12 @@
-
 z = 0; //z position
 
 //speed and direction
-spd = 0.2; //0.2
-spd_x = random_range(-1,1);
-spd_y = random_range(-1,1);
-dir = point_direction(0,0,spd_x,spd_y);
-spd_x = lengthdir_x(spd,dir);
-spd_y = lengthdir_y(spd,dir);
+spd = 0.2; //speed
+spd_x = random_range(-1,1); //speed vector x component
+spd_y = random_range(-1,1); //speed vector y component
+dir = point_direction(0,0,spd_x,spd_y); //calculate direction
+spd_x = lengthdir_x(spd,dir); //normalize x component to spd
+spd_y = lengthdir_y(spd,dir); //normalize y component to spd
 
 //rotation
 rotation_x = 0;
@@ -38,12 +37,10 @@ drawSelf = function()
 {
 	matrix_set(matrix_world, matrix);
 	vertex_submit(model, pr_trianglelist, sprite_get_texture(spr_stone, 0));
-	//matrix_set(matrix_world, matrix_build_identity());
 }
 //Method to draw shadow with matrix applied (position, rotation, and scale applied)
 drawSelfShadow = function()
 {
 	matrix_set(matrix_world, matrix);
 	vertex_submit(shadow_vbuff, pr_trianglelist, -1);
-	//matrix_set(matrix_world, matrix_build_identity());
 }

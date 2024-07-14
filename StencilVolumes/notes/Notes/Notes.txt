@@ -1,0 +1,13 @@
+//BUGS:
+	//camera drifts up slowly in POV camera mode.
+
+//TODO:
+	//Create separate shadow volumes buffer for z-pass
+	//Add debug view inspector for lighting
+	
+//Optimizations:
+	//Extend shadow volumes only as far as light radius (reduces fill-rate)
+	
+//Experimental:
+	//Soft shadows through clustered light sources
+	//Soft shadows through shadow volume jittering

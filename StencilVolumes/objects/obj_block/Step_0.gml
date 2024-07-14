@@ -1,5 +1,3 @@
-var _time = global.time;
-
 //wrap x position if block exits boundary
 var _boundary_x = BLOCK_SIZE*TILES_X;
 if(x < 0 and spd_x < 0)
@@ -26,8 +24,9 @@ x += spd_x;
 y += spd_y;
 
 //rotate the block
+var _time = global.time;
 rotation_x = (rotation_x_spd*_time + rotation_x_phase) mod 359;
 rotation_y = (rotation_y_spd*_time + rotation_y_phase) mod 359;
 
-//build world matrix for drawing
+//update world matrix for drawing
 matrix = matrix_build(x, y, z, rotation_x, rotation_y, rotation_z, scale, scale, scale);

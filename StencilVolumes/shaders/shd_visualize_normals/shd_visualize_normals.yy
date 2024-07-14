@@ -1,7 +1,7 @@
 {
   "$GMShader":"",
-  "%Name":"shd_test",
-  "name":"shd_test",
+  "%Name":"shd_visualize_normals",
+  "name":"shd_visualize_normals",
   "parent":{
     "name":"Shaders",
     "path":"folders/Shaders.yy",
