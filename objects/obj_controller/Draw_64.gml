@@ -1,5 +1,6 @@
 /// @description GUI
 
+//Only show GUI if toggled (on by default)
 if(show_GUI)
 {
 	var _w = window_get_width();
@@ -71,7 +72,7 @@ if(show_GUI)
 	{
 		case camera_types.orbit:
 		{
-			draw_text(_w3,_h3,"Orbit");
+			draw_text(_w3,_h3,"Orbit Cam");
 			draw_text(_w3,_h4,"WASD: pan camera");
 			draw_text(_w3,_h5,"Mouse scroll: zoom in/out");
 
@@ -79,7 +80,7 @@ if(show_GUI)
 		}
 		case camera_types.POV:
 		{
-			draw_text(_w3,_h3,"POV");
+			draw_text(_w3,_h3,"POV Cam");
 			draw_text(_w3,_h4,"WASD: move camera x/y");
 			draw_text(_w3,_h5,"Mouse: look");
 			draw_text(_w3,_h6,"Tab: Look-enable/disable");

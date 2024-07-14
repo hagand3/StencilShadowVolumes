@@ -15,8 +15,8 @@ gpu_set_alphatestref(0.5); //set alpha testing reference
 	#macro TILES_Y 40 //Area y dimension
 	#macro TILES_Z 40 //Area z dimension
 	//Lights
-	#macro AMBIENT_COL_DEFAULT make_color_rgb(100,100,100)
-	#macro LIGHT_RADIUS_DEFAULT 100 
+	#macro AMBIENT_COL_DEFAULT make_color_rgb(100,100,100) //Ambient color default
+	#macro LIGHT_RADIUS_DEFAULT 100  //Light radius default
 	//display
 	#macro DISPLAY_SCALE 0.9 //set to lower value if smaller screen is desired
 	#macro FULLSCREEN false //set full-screen: true/false
@@ -49,6 +49,8 @@ gpu_set_alphatestref(0.5); //set alpha testing reference
 	#macro X_UP 1 //x-up direction
 	#macro Y_UP 1 //y-up direction
 	#macro Z_UP 1 //z-up direction
+	//Shadow Volume stuff
+	#macro SHADOW_VOLUME_EXTRUSION_DISTANCE 10000.0 //sufficiently large but not too large to cause precision issues
 	
 #endregion 
 
@@ -104,7 +106,6 @@ enum camera_types
 camera_type = camera_types.orbit; //default Orbit
 
 //(F11) Show/Hide GUI
-
 show_GUI = true; //on by default
 
 #endregion
@@ -520,7 +521,6 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 		draw_light_define_ambient(c_black);	//set ambient to black (no ambient) for future passes involving lighting
 		draw_set_lighting(false); //disable lighting
 	
-	
 	}
 
 	//Render Shadow Volumes to surface (pass in light source)
@@ -548,22 +548,22 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 			//Depth Pass:
 			case shadow_volumes_render_techniques.depth_pass:
 			{
-				shader_set(shd_render_shadow_volumes);
-				var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos");
-				var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol");
-				var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance");
-				shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]);
-				shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); 
-				shader_set_uniform_f(_extrusion_dist,10000.0); //set extrusion distance
+				shader_set(shd_render_shadow_volumes); //set shadow volume shader
+				var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos"); //light position uniform
+				var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol"); //light color uniform (only used in debug render)
+				var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance"); //extrusion distance uniform
+				shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]); //pass-in light position
+				shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); //pass-in light color
+				shader_set_uniform_f(_extrusion_dist,SHADOW_VOLUME_EXTRUSION_DISTANCE); //set large extrusion distance
 			
 					//render front-facing shadow volume polygons
 					gpu_set_cullmode(cull_counterclockwise);
-					gpu_set_stencil_pass(stencilop_incr); //increment
+					gpu_set_stencil_pass(stencilop_incr); //increment on depth-pass
 					with(obj_block){drawSelfShadow();}
 		
 					//render rear-facing shadow volume polygons
 					gpu_set_cullmode(cull_clockwise);
-					gpu_set_stencil_pass(stencilop_decr); //decrement
+					gpu_set_stencil_pass(stencilop_decr); //decrement on depth-pass
 					with(obj_block){drawSelfShadow();}
 					matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 						
@@ -575,22 +575,22 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 			//Depth Fail:
 			case shadow_volumes_render_techniques.depth_fail:
 			{
-				shader_set(shd_render_shadow_volumes);
-				var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos");
-				var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol");
-				var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance");
-				shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]);
-				shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); 
-				shader_set_uniform_f(_extrusion_dist,10000.0); //set extrusion distance
+				shader_set(shd_render_shadow_volumes); //set shadow volume shader
+				var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos"); //light position uniform
+				var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol"); //light color uniform (only used in debug render)
+				var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance"); //extrusion distance uniform
+				shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]); //pass-in light position
+				shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); //pass-in light color
+				shader_set_uniform_f(_extrusion_dist,SHADOW_VOLUME_EXTRUSION_DISTANCE); //set large extrusion distance
 			
 					//render front-facing shadow volume polygons
 					gpu_set_cullmode(cull_clockwise);
-					gpu_set_stencil_depth_fail(stencilop_incr); //increment
+					gpu_set_stencil_depth_fail(stencilop_incr); //increment on depth-fail
 					with(obj_block){drawSelfShadow();}
 			
 					//render rear-facing shadow volume polygons
 					gpu_set_cullmode(cull_counterclockwise);
-					gpu_set_stencil_depth_fail(stencilop_decr); //decrement
+					gpu_set_stencil_depth_fail(stencilop_decr); //decrement on depth-fail
 					with(obj_block){drawSelfShadow();}
 					matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 
@@ -611,26 +611,27 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 		gpu_set_colorwriteenable(true,true,true,true); //enable color and alpha writing
 		gpu_set_ztestenable(true); //enable depth testing
 		gpu_set_cullmode(cull_counterclockwise); //set cull mode to counterclockwise (back-faces)
-		gpu_set_stencil_ref(STENCIL_REF_VAL);
+		gpu_set_stencil_ref(STENCIL_REF_VAL); //set stencil reference value
 	
 		draw_set_lighting(true); //reactivate lighting (ambient term should still be set to c_black, meaning no additional ambient light is rendered)
 		draw_light_define_point(_light.idx, _light.x,_light.y,_light.z, _light.radius, _light.color); //define point source from light struct
 		draw_light_enable(_light.idx, true); //enable light source
 	
 		//Render unshaded geometry
-		gpu_set_stencil_func(cmpfunc_equal);
+		gpu_set_stencil_func(cmpfunc_equal); //render unshaded geometry where stencil value is equal to reference
 		gpu_set_blendmode(bm_add); //set additive blend mode
 			with (obj_block){drawSelf();}
 			matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
 	
 		//Render shaded geometry
-		gpu_set_stencil_func(cmpfunc_notequal);
-		gpu_set_blendmode(bm_subtract);
+		gpu_set_stencil_func(cmpfunc_notequal); //only shade where stencil value is not-equal to reference value
+		gpu_set_blendmode(bm_subtract); //set subtractive blend mode
 			with (obj_block){drawSelf();}
 			matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-		gpu_set_blendmode(bm_normal); //reset blendmode to normal
+		
+		gpu_set_blendmode(bm_normal); //reset blend mode to normal
 		draw_light_enable(_light.idx,false); //disable point source
 		draw_set_lighting(false); //disable lighting 
 		gpu_set_stencil_enable(false); //disable stencil test for drawing application surface (stuff gets funky otherwise)
@@ -641,11 +642,11 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 	//Visualize normals
 	visualize_normals = function()
 	{
-		gpu_set_zwriteenable(true);
-		gpu_set_ztestenable(true);
-		draw_clear_alpha(c_purple,1.0);
-		gpu_set_cullmode(cull_counterclockwise);
-		shader_set(shd_visualize_normals);
+		gpu_set_zwriteenable(true); //enable zwriting
+		gpu_set_ztestenable(true); //enable ztesting
+		draw_clear_alpha(c_purple,1.0); //clear surface
+		gpu_set_cullmode(cull_counterclockwise); //set CCW cullmode
+		shader_set(shd_visualize_normals); //set normals visualization shader
 			with (obj_block){drawSelf();}
 			matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
@@ -655,13 +656,10 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 	//Visualize shadow volumes
 	visualize_shadow_volumes = function()
 	{
-		//Visualize Shadow Volumes
-		gpu_set_zwriteenable(true);
-		gpu_set_ztestenable(true);
-		gpu_set_blendmode(bm_normal);
-		draw_clear_alpha(c_purple,1.0);
-		//render scene
-		gpu_set_cullmode(cull_counterclockwise);
+		gpu_set_zwriteenable(true); //enable zwriting
+		gpu_set_ztestenable(true); //enable ztesting
+		draw_clear_alpha(c_purple,1.0); //clear surface
+		gpu_set_cullmode(cull_counterclockwise); //set CCW cullmode
 			with (obj_block){drawSelf();}
 			matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
@@ -670,14 +668,14 @@ zfail_shadow_volume_vertex_buffer = create_shadow_volume_buffer(block,vertex_for
 		for(var _ii = 0, _light; _ii < NUM_LIGHTS; _ii++) //For each light source:
 		{
 			_light = lights[_ii]; //get light source
-			shader_set(shd_render_shadow_volumes);
-			var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos");
-			var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol");
-			var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance");
-			shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]);
-			shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); 
-			shader_set_uniform_f(_extrusion_dist,20.0); //set extrusion distance
-			gpu_set_cullmode(cull_noculling);
+			shader_set(shd_render_shadow_volumes); //set shadow volume shader
+			var _light_pos = shader_get_uniform(shd_render_shadow_volumes, "LightPos"); //light position uniform
+			var _light_col = shader_get_uniform(shd_render_shadow_volumes, "LightCol"); //light color uniform (only used in debug render)
+			var _extrusion_dist = shader_get_uniform(shd_render_shadow_volumes, "extrusion_distance"); //extrusion distance uniform
+			shader_set_uniform_f_array(_light_pos, [_light.x,_light.y,_light.z]); //pass-in light position
+			shader_set_uniform_f_array(_light_col,[color_get_red(_light.color),color_get_green(_light.color),color_get_blue(_light.color)]); //pass-in light color
+			shader_set_uniform_f(_extrusion_dist,20.0); //set small extrusion distance
+			gpu_set_cullmode(cull_noculling); //set no culling (want to visualize back-faces as well)
 				with(obj_block){drawSelfShadow();}
 				matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
 			shader_reset();

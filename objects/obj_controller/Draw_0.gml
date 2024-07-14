@@ -5,6 +5,7 @@ camera_set_view_mat(camera, cam_view_matrix);
 camera_set_proj_mat(camera, cam_proj_matrix);
 camera_apply(camera);
 
+
 //Switch between main rendering pipeline and debug rendering
 switch(debug_render)
 {
