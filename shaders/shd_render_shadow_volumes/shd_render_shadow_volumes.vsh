@@ -15,8 +15,7 @@
 //These caps ensure that if the camera resides inside a shadow volume, the stencil buffer will count correctly
 
 attribute vec3 in_Position;                  // (x,y,z)
-attribute vec3 in_Normal;					// normal (nx,ny,nz)
-attribute vec4 in_Colour;					
+attribute vec3 in_Normal;					// normal (nx,ny,nz)			
 
 uniform vec3 LightPos; //position of the light source
 uniform vec3 LightCol; //rgb color of light

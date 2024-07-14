@@ -84,10 +84,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxA);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyA);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzA);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_xC);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_yC);
@@ -95,10 +91,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxC);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyC);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzC);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_xB);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_yB);
@@ -106,10 +98,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nxB);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nyB);
 			buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_nzB);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,255); //extrudable cap condition
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
-			buffer_write(_buffer_shadows_vertex_buffer,buffer_u8,0);
 		}
 		
 		//create unique hashes per triangle edge to find other triangles that 
@@ -208,7 +196,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A); 
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A);
@@ -216,7 +203,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
             
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y2A); 
@@ -224,7 +210,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 						//Triangle 2
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x2A);
@@ -233,7 +218,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A);
@@ -241,7 +225,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYB);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZB);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_x1A);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_y1A); 
@@ -249,7 +232,6 @@ function create_shadow_volume_buffer(_vertex_buffer,_vertex_format,_shadow_volum
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normXA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normYA);
 						buffer_write(_buffer_shadows_vertex_buffer,buffer_f32,_normZA);
-						buffer_write(_buffer_shadows_vertex_buffer,buffer_u32,0); 
 								
 						variable_struct_remove(_struct_edge_graph, _hash);
 					}
