@@ -7,8 +7,8 @@ gpu_set_alphatestref(0.5); //set alpha testing reference
 
 #region Macros (change these as you see fit)
 
-	#macro NUM_BLOCKS 100
-	#macro NUM_LIGHTS 7 //max 7
+	#macro NUM_BLOCKS 100 //number of shadowcasting blocks
+	#macro NUM_LIGHTS 7 //max 7 using built-in light source functions
 	#macro BLOCK_MIN_Z 30 //min z spawn position for blocks
 	#macro BLOCK_MAX_Z 80 //max z spawn position for blocks
 	#macro TILES_X 40 //Area x dimension
@@ -18,7 +18,7 @@ gpu_set_alphatestref(0.5); //set alpha testing reference
 	#macro AMBIENT_COL_DEFAULT make_color_rgb(100,100,100)
 	#macro LIGHT_RADIUS_DEFAULT 100 
 	//display
-	#macro DISPLAY_SCALE 1 //set to lower value if smaller screen is desired
+	#macro DISPLAY_SCALE 0.9 //set to lower value if smaller screen is desired
 	#macro FULLSCREEN false //set full-screen: true/false
 	#macro ANTI_ALIASING 0 //set AA level: 0, 2, 4, or 8
 	#macro VSYNC true //set VSYNC: true/false
@@ -57,6 +57,7 @@ gpu_set_alphatestref(0.5); //set alpha testing reference
 var _w = display_get_width()*DISPLAY_SCALE;
 var _h = display_get_height()*DISPLAY_SCALE;
 window_set_size(_w,_h); //set window size
+display_set_gui_size(_w,_h); //set GUI size
 surface_resize(application_surface,_w,_h); //set application surface size
 display_reset(ANTI_ALIASING,VSYNC);
 
@@ -101,6 +102,10 @@ enum camera_types
 	length,
 }
 camera_type = camera_types.orbit; //default Orbit
+
+//(F11) Show/Hide GUI
+
+show_GUI = true; //on by default
 
 #endregion
 
