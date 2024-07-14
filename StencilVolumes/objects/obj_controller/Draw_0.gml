@@ -22,48 +22,13 @@ switch(debug_render)
 	
 	case debug_renders.normals: //Visualize Normals
 	{
-		
-		draw_clear_depth(1);
-		gpu_set_zwriteenable(true);
-		gpu_set_ztestenable(true);
-		draw_clear_alpha(c_purple,1.0);
-		shader_set(shd_visualize_normals);
-		gpu_set_cullmode(cull_counterclockwise);
-		with (obj_block){drawSelf();}
-		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
-		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-		shader_reset();
+		visualize_normals();
 		break;
 	}
 	
-	case debug_renders.shadow_volumes: //renders shadow volumes 
+	case debug_renders.shadow_volumes: //Visualize partially extruded Shadow Volumes 
 	{
-		//Visualize Shadow Volumes
-		draw_clear_depth(1);
-		gpu_set_zwriteenable(true);
-		gpu_set_ztestenable(true);
-		gpu_set_blendmode(bm_normal);
-		draw_clear_alpha(c_purple,1.0);
-		//render scene
-		gpu_set_cullmode(cull_counterclockwise);
-		with (obj_block){drawSelf();}
-		matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
-		vertex_submit(vbuff_skybox, pr_trianglelist, sprite_get_texture(spr_grass,0));
-		
-		//render shadow volumes
-		//For each light source:
-		for(var _ii = 0, _light; _ii < NUM_LIGHTS; _ii++)
-		{
-			_light = lights[_ii]; //get light source
-			shader_set(shd_visualize_shadow_volumes);
-				var _uniform = shader_get_uniform(shd_visualize_shadow_volumes, "LightPos");
-				shader_set_uniform_f_array(_uniform, [_light.x,_light.y,_light.z]);
-				gpu_set_cullmode(cull_noculling);
-				with(obj_block){drawSelfShadow();}
-				matrix_set(matrix_world, matrix_build_identity()); //reset world matrix (each cube sets its own world matrix)
-			shader_reset();
-			gpu_set_cullmode(cull_counterclockwise);
-		}
+		visualize_shadow_volumes();
 		break;
 	}
 }

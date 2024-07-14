@@ -1,7 +1,7 @@
 {
   "$GMShader":"",
-  "%Name":"shd_visualize_shadow_volumes",
-  "name":"shd_visualize_shadow_volumes",
+  "%Name":"shd_render_shadow_volumes",
+  "name":"shd_render_shadow_volumes",
   "parent":{
     "name":"Shaders",
     "path":"folders/Shaders.yy",
